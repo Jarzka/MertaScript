@@ -386,7 +386,7 @@ class Speaker():
 			return True
 				
 		elif eventId == self.SOUND_ID_SCORE_ENEMY_TEAM \
-		and elf._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM):
+		and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM):
 			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
 			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
 			self._handle_event_audio_files(fileClient, fileEnemy)
