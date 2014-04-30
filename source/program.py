@@ -88,7 +88,7 @@ class Program():
 		# Host / Join?	
 		if self._START_METHOD == "host":
 			self._host()
-		elif startMethod == "join":
+		elif self._START_METHOD == "join":
 			self._join()
 		
 	def _host(self):
