@@ -1,0 +1,1 @@
+Create a new folder "mertaranta" and put the missing wav files there. More info in readme.pdf.
