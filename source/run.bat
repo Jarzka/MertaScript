@@ -1,0 +1,1 @@
+python "H:\Jari\Dropbox\Projektit\Ohjelmointi\Python\CS for CSGO r3\main.py"
