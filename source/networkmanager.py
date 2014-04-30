@@ -40,17 +40,17 @@ class NetworkManager():
 		
 		while self._running:
 			try:
-				clientSocket, address = self._socket.accept() # Accept a connection. The return value is a pair (conn, address) where conn is a new socket object usable to send and receive data on the connection, and address is the address bound to the socket on the other end of the connection.
+				client_socket, address = self._socket.accept() # Accept a connection. The return value is a pair (conn, address) where conn is a new socket object usable to send and receive data on the connection, and address is the address bound to the socket on the other end of the connection.
 				
 				print ("Got connection from {}".format(address))
 				
 				print("Assigning id {} to the client.".format(self._nextFreeId))
-				c = client.Client(self._nextFreeId, clientSocket) # Create a new client object
+				c = client.Client(self._nextFreeId, client_socket) # Create a new client object
 				self._nextFreeId += 1
 				self._clients.append(c)
-				clientThread = ClientThread() # Create a new thread that receives messages from the client
-				clientThread.init(c, self)
-				clientThread.start()
+				client_thread = ClientThread() # Create a new thread that receives messages from the client
+				client_thread.init(c, self)
+				client_thread.start()
 			except socket.error as e:
 				print("Error listening client connections: {}".format(e))
 				break
@@ -102,17 +102,17 @@ class NetworkManager():
 	# @param sender client object who sent the message
 	def _decode_message(self, message, sender=None):
 		if re.search("^CON_MSG\|.+", message):
-			arrayMessage = message.split("|")
-			print(arrayMessage[1])
+			array_message = message.split("|")
+			print(array_message[1])
 		elif re.search("^PLAY_SOUND\|.+", message):
-			arrayMessage = message.split("|")
-			self._program.get_speaker().play_file(self._program.get_path_sounds(), arrayMessage[1])
-			print("Playing sound \"{}\"".format(arrayMessage[1]))
+			array_message = message.split("|")
+			self._program.get_speaker().play_file(self._program.get_path_sounds(), array_message[1])
+			print("Playing sound \"{}\"".format(array_message[1]))
 		elif re.search("^TEAM|.+", message):
-			arrayMessage = message.split("|")
+			array_message = message.split("|")
 			if sender is not None:
-				print ("Client {} is playing on team {}".format(sender.get_id(), arrayMessage[1]))
-				sender.set_team(int(arrayMessage[1]))
+				print ("Client {} is playing on team {}".format(sender.get_id(), array_message[1]))
+				sender.set_team(int(array_message[1]))
 			
 	def _remove_disconnected_clients(self):
 		i = 0
