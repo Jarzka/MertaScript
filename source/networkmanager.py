@@ -36,7 +36,7 @@ class NetworkManager():
 			self._socket.listen(5) # The backlog argument specifies the maximum number of queued connections and should be at least 0; the maximum value is system-dependent (usually 5), the minimum value is forced to 0
 		except socket.error as e:
 			print("Could not start server: {}". format(e))
-			return False
+			return
 		
 		while self._running:
 			try:
@@ -52,7 +52,7 @@ class NetworkManager():
 				clientThread.init(c, self)
 				clientThread.start()
 			except socket.error as e:
-				print("Error listening client connections: {}".format(e))
+				print("Error: {}".format(e))
 				break
 		
 		print("Server shutting down...")
@@ -63,38 +63,34 @@ class NetworkManager():
 		self._running = False
 
 	def start_join(self, ip, port):
-		while True:
-			print("Joining game...")
-			
-			try: 
-				self._socket = socket.socket()
-				self._socket.connect((ip, port))
+		print("Joining game...")
+		
+		try: 
+			self._socket = socket.socket()
+			self._socket.connect((ip, port))
+		except socket.error as e:
+			print ("Could not join: {}". format(e))
+			return
+		
+		print ("Host address resolved: {}".format(self._socket.getsockname()))
+		
+		# Send team info to the server
+		time.sleep(1)
+		message = "TEAM|" + str(self._program.get_client_team())
+		self._socket.sendall(message.encode())
+		
+		# Listen server messages
+		while self._running:
+			try:
+				data = self._socket.recv(self._BUFFER_SIZE).decode()
+				# print("Got message from the server: {}".format(data))
+				self._decode_message(data)
 			except socket.error as e:
-				print ("Could not join: {}". format(e))
-				return False
+				print("Error: {}".format(e))
+				break
 			
-			print ("Host address resolved: {}".format(self._socket.getsockname()))
-			
-			# Send team info to the server
-			
-			time.sleep(1)
-			message = "TEAM|" + str(self._program.get_client_team())
-			self._socket.sendall(message.encode())
-			
-			# Listen server messages
-			while self._running:
-				try:
-					data = self._socket.recv(self._BUFFER_SIZE).decode()
-					# print("Got message from the server: {}".format(data))
-					self._decode_message(data)
-				except socket.error as e:
-					print("Error: {}".format(e))
-					break
-				
-			print("Disconnecting...")
-			self._socket.close()
-			print("Disconnected. Trying again in a few seconds.")
-			time.sleep(2)
+		print("Disconnecting...")
+		self._socket.close()
 			
 	def is_host(self):
 		return self._isHost

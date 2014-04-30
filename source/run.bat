@@ -1,1 +1,1 @@
-python "H:\Jari\Dropbox\Projektit\Ohjelmointi\Python\CS for CSGO r3\main.py"
+py "C:\CS for CSGO\main.py"

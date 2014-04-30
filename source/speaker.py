@@ -47,21 +47,25 @@ class Speaker():
 	PROBABILITY_SCORE_CLIENT_TEAM = 100
 	PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
 	PROBABILITY_TIME = 50 # 30
-	PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 10
-	PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING = 20
-	PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 5
+	PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 20
+	PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING = 100
+	PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 10
 	
 	def __init__(self, program, roundTime):
+		# Attributes
 		self._lastTimeStartedSayingInSeconds = 0
 		self._lastFileDurationInSeconds = 0
+		
 		self._roundStartTime = 0 # Unix Timestamp
 		self._team1Side = "" # ct or t
 		self._team2Side = ""
 		self._team1Points = 0
 		self._team2Points = 0
 		self._roundTimeinSeconds = roundTime
+		
 		self._program = program
 	
+		# ID 2
 		# The player or a teammate kills somebody with headshot
 		self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM = (
 		"taivas_varjele.wav",
@@ -76,6 +80,7 @@ class Speaker():
 		
 		self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM)
 			
+		# ID 4
 		# Enemy killed the player or a teammate with headshot
 		self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM = (
 		"paha virhe.wav",
@@ -263,7 +268,7 @@ class Speaker():
 
 	# The method randomly chooses a sound file from the given dictionary and returns it.
 	# @param dictionary. key = SOUND_ID, value = file.wav
-	def _select_dictionary_sound_randomly(self, dictionary):
+	def _select_sound(self, dictionary):
 		if len(dictionary) == 0:
 				file = dictionary[0]
 				return file
@@ -285,175 +290,218 @@ class Speaker():
 		
 		return True
 	
-	# @param percent int a number between 0 - 100. The higher it is the more likely it is that his function returns True
-	def _get_bool_from_percent(self, percent):
+	def _probability(self, value):
 		value2 = random.randrange(0, 100)
 		# print(value2)
-		if percent >= value2:
+		if value >= value2:
 			return True
 		return False
 	
 	# This method will ask Network Manager to send a PLAY_SOUND command to all clients
-	# @param fileSameTeam string Audio file name to be sent for the clients who play in the same team as host
-	# @param fileDifferentTeam string Audio file name to be sent for the clients who play in different team than host
+	# @param fileSameTeam string Audio file to be sent for the clients who play in the same team as host
+	# @param fileDifferentTeam string Audio file to be sent for the clients who play in different team than host
 	def _send_play_sound_command_to_clients(self, fileSameTeam = None, fileDifferentTeam = None):
 		if fileSameTeam is not None:
 			self._program.get_network_manager().send_message_to_clients_team("PLAY_SOUND|" + fileSameTeam, self._program.get_client_team())
 		if fileDifferentTeam is not None:
 			self._program.get_network_manager().send_message_to_clients_team("PLAY_SOUND|" + fileDifferentTeam, self._program.get_enemy_team())
 	
-	# Play an audio file related to the given eventId. Will also send the play audio command to clients
-	def handle_event(self, eventId):
-		# The function checks the probability of playing an audio file from a specific dictionary and decides if it is played.
-		
+	# Selects a sound file corresponding to the given eventId. Will also send the play audio command to clients
+	# @param probability int How likely is it that the speaker will say the eventId. Procent number between 1 and 100.
+	def say(self, eventId):
 		# *************** Kills **************
-		if (eventId == self.SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM
-		and self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_CLIENT_TEAM)):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		if (eventId == self.SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM):
+			if not self._probability(self.PROBABILITY_KILL_HEADSHOT_CLIENT_TEAM):
+				return
+			
+			file = self._select_sound(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM) # Randomly select one corresponding sound file
+			self.play_file(self._program.get_path_sounds(), file) # Play audio file locally
+			
+			if self._program.get_network_manager().is_host():
+				# Send play audio command for all clients
+				# For this type of audio we need to separately select a different audio file for those clients who play on different team than the host
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM))
 				
-		elif (eventId == self.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM
-		and self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_ENEMY_TEAM)):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
+		elif (eventId == self.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM):
+			if not self._probability(self.PROBABILITY_KILL_HEADSHOT_ENEMY_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM))
 
-		elif (eventId == self.SOUND_ID_KILL_KNIFE_CLIENT_TEAM
-		and self._get_bool_from_percent(self.PROBABILITY_KILL_KNIFE_CLIENT_TEAM)):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_KILL_KNIFE_CLIENT_TEAM):
+			if not self._probability(self.PROBABILITY_KILL_KNIFE_CLIENT_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM))
 				
-		elif (eventId == self.SOUND_ID_KILL_KNIFE_ENEMY_TEAM
-		and self._get_bool_from_percent(self.PROBABILITY_KILL_KNIFE_ENEMY_TEAM)):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_KILL_KNIFE_ENEMY_TEAM):
+			if not self._probability(self.PROBABILITY_KILL_KNIFE_ENEMY_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM))
 				
 		# *************** Time **************
 				
-		elif eventId == self.SOUND_ID_TIME_0_20 \
-		and self._get_bool_from_percent(self.PROBABILITY_TIME):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_20)
-			self._handle_event_audio_files(fileClient, fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_TIME_0_20):
+			if not self._probability(self.PROBABILITY_TIME):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_TIME_0_20)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, file)
 				
-		elif eventId == self.SOUND_ID_TIME_0_10 \
-		and self._get_bool_from_percent(self.PROBABILITY_TIME):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_10)
-			self._handle_event_audio_files(fileClient, fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_TIME_0_10):
+			if not self._probability(self.PROBABILITY_TIME):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_TIME_0_10)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, file)
 				
-		elif eventId == self.SOUND_ID_TIME_0_30 \
-		and self._get_bool_from_percent(self.PROBABILITY_TIME):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_30)
-			self._handle_event_audio_files(fileClient, fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_TIME_0_30):
+			if not self._probability(self.PROBABILITY_TIME):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_TIME_0_30)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, file)
 				
-		elif eventId == self.SOUND_ID_TIME_0_30 \
-		and self._get_bool_from_percent(self.PROBABILITY_TIME):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_30)
-			self._handle_event_audio_files(fileClient, fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_TIME_0_30):
+			if not self._probability(self.PROBABILITY_TIME):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_TIME_0_30)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, file)
 				
 		# *************** Teamkiller **************
 				
-		elif eventId == self.SOUND_ID_TEAMKILLER_CLIENT_TEAM \
-		and self._get_bool_from_percent(self.PROBABILITY_TEAMKILLER_CLIENT_TEAM):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_TEAMKILLER_CLIENT_TEAM):
+			if not self._probability(self.PROBABILITY_TEAMKILLER_CLIENT_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM))
 				
-		elif eventId == self.SOUND_ID_TEAMKILLER_ENEMY_TEAM \
-		and self._get_bool_from_percent(self.PROBABILITY_TEAMKILLER_ENEMY_TEAM):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_TEAMKILLER_ENEMY_TEAM):
+			if not self._probability(self.PROBABILITY_TEAMKILLER_ENEMY_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM))
 				
 		# *************** Scores ***************
 		
-		elif eventId == self.SOUND_ID_SCORE_CLIENT_TEAM \
-		and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_SCORE_CLIENT_TEAM):
+			if not self._probability(self.PROBABILITY_SCORE_CLIENT_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM))
 				
-		elif eventId == self.SOUND_ID_SCORE_ENEMY_TEAM \
-		and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_SCORE_ENEMY_TEAM):
+			if not self._probability(self.PROBABILITY_SCORE_ENEMY_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM))
 		
-		elif eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_2_3 \
-		and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_2_3)
-			self._handle_event_audio_files(fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_2_3):
+			if not self._probability(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_2_3)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file)
 				
-		elif eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_3_1 \
-		and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_3_1)
-			self._handle_event_audio_files(fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_3_1):
+			if not self._probability(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_3_1)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file)
 				
-		elif eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_4_0 \
-		and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_4_0)
-			self._handle_event_audio_files(fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_4_0):
+			if not self._probability(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_4_0)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file)
 				
-		elif eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_5_1 \
-		and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_5_1)
-			self._handle_event_audio_files(fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_5_1):
+			if not self._probability(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_5_1)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file)
 				
-		elif eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_6_1 \
-		and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1)
-			self._handle_event_audio_files(fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_SCORE_CLIENT_TEAM_6_1):
+			if not self._probability(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file)
 		
 		# *************** Round Start ***************
 		
-		elif eventId == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING \
-		and self._get_bool_from_percent(self.PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING):
+			if not self._probability(self.PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING))
 				
-		elif eventId == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING \
-		and self._get_bool_from_percent(self.PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING)
-			fileEnemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING)
-			self._handle_event_audio_files(fileClient, fileEnemy)
-			return True
+		elif (eventId == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING):
+			if not self._probability(self.PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING)
+			self.play_file(self._program.get_path_sounds(), file)
+			
+			if self._program.get_network_manager().is_host():
+				self._send_play_sound_command_to_clients(file, self._select_sound(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING))
 				
 		# *************** Bomb planted ***************
 		
-		elif eventId == self.SOUND_ID_BOMB_PLANTED_CLIENT_TEAM \
-		and self._get_bool_from_percent(self.PROBABILITY_BOMB_PLANTED_CLIENT_TEAM):
-			fileClient = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM)
-			self._handle_event_audio_files(fileClient)
-			return True
+		elif (eventId == self.SOUND_ID_BOMB_PLANTED_CLIENT_TEAM):
+			if not self._probability(self.PROBABILITY_BOMB_PLANTED_CLIENT_TEAM):
+				return
+			file = self._select_sound(self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM)
+			self.play_file(self._program.get_path_sounds(), file)
 			
-		return False
-	
-	# @param audioFileClient string The file to be played locally and to be send to clients who play in the same team than host
-	# @param audioFileEnemy string The file to be sent to client who play in different team than the host
-	def _handle_event_audio_files(self, audioFileClient, audioFileEnemy=None):
-			self.play_file(self._program.get_path_sounds(), audioFileClient) # Play audio file locally
 			if self._program.get_network_manager().is_host():
-				self._send_play_sound_command_to_clients(audioFileClient, audioFileEnemy)
+				self._send_play_sound_command_to_clients(file)
 		
 	def play_file(self, path, file):
 		filePath = path + file
@@ -507,6 +555,7 @@ class Speaker():
 		self._team1Points = 0
 		self._team2Points = 0
 		
+	# 
 	def update_state(self):
 		self._check_time()
 		
@@ -518,11 +567,11 @@ class Speaker():
 			print("Round time left: {}".format(roundTimeLeft))
 			
 		if roundTimeLeft == 30:
-			self.handle_event(self.SOUND_ID_TIME_0_30)
+			self.say(self.SOUND_ID_TIME_0_30)
 		elif roundTimeLeft == 20:
-			self.handle_event(self.SOUND_ID_TIME_0_20)
+			self.say(self.SOUND_ID_TIME_0_20)
 		elif roundTimeLeft == 10:
-			self.handle_event(self.SOUND_ID_TIME_0_10)
+			self.say(self.SOUND_ID_TIME_0_10)
 		
 	# @param teamId int 1 or 2
 	def get_points(self, teamId):
@@ -539,11 +588,14 @@ class Speaker():
 		elif self._team2Side == side and points < self._team2Points:
 			self.reset_points()
 		
-		# Remember old values before changing them
+		# Remember values before changing them
 		team1PointsOld = self._team1Points
 		team2PointsOld = self._team2Points
 		clienTeamPointsOld = self.get_client_team_points()
 		enemyTeamPointsOld = self.get_enemy_team_points()
+		
+		print("Team 1 old score {}".format(team1PointsOld))
+		print("Team 2 old score {}".format(team2PointsOld))
 		
 		# Give the points to the team that plays on that side
 		if self._team1Side == side:
@@ -558,22 +610,22 @@ class Speaker():
 			print("Client team got more points")
 			# Are the points specific?
 			if self.get_client_team_points() == 2 and self.get_enemy_team_points() == 3:
-				self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_2_3)
+				self.say(self.SOUND_ID_SCORE_CLIENT_TEAM_2_3)
 			elif self.get_client_team_points() == 3 and self.get_enemy_team_points() == 1:
-				self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_3_1)
+				self.say(self.SOUND_ID_SCORE_CLIENT_TEAM_3_1)
 			elif self.get_client_team_points() == 4 and self.get_enemy_team_points() == 0:
-				self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_4_0)
+				self.say(self.SOUND_ID_SCORE_CLIENT_TEAM_4_0)
 			elif self.get_client_team_points() == 5 and self.get_enemy_team_points() == 1:
-				self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_5_1)
+				self.say(self.SOUND_ID_SCORE_CLIENT_TEAM_5_1)
 			elif self.get_client_team_points() == 6 and self.get_enemy_team_points() == 1:
-				self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_6_1)
+				self.say(self.SOUND_ID_SCORE_CLIENT_TEAM_6_1)
 			else: # No specific score found, play the default sound
-				self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM)
+				self.say(self.SOUND_ID_SCORE_CLIENT_TEAM)
 				
 		# Did enemy team got a new point?
 		if self.get_enemy_team_points() > enemyTeamPointsOld:
 			print("Enemy team got more points")
-			self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM)
+			self.say(self.SOUND_ID_SCORE_ENEMY_TEAM)
 
 	# Tells in which team the current client is playing
 	# @return string ct or t
@@ -583,7 +635,7 @@ class Speaker():
 		if teamNumber == 2:
 			return self._team2Side
 
-	# @param side string ct or t
+	# @param sode string ct or t
 	def set_team_side(self, teamNumber, side):
 		if teamNumber == 1:
 			self._team1Side = side

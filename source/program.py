@@ -11,49 +11,40 @@ from threading import Thread
 	
 class Program():
 	def __init__(self):
-		self._handle_config_file()
-		self._readLines = 0 # How many lines have been read from the log file
+		self._readLines = 0 # How many lines have been read from the log file (the program processes every line once)
 		self._networkManager = networkmanager.NetworkManager(self)
-		self._speaker = speaker.Speaker(self, int(self.get_value_from_config_file("host_round_time")))
-		self._readFileIntervalInSeconds = 1 # How often the program scans the log file
-		self._running = True # Main loop condition
-
-	# Scans the config file and stores it's values in to variables
-	def _handle_config_file(self):
-		try:
-			self._HOST_PORT = int(self._program.get_value_from_config_file("host_port"))
-			self._JOIN_IP = self._program.get_value_from_config_file("join_ip")
-			self._START_METHOD = self.get_value_from_config_file("start")
-			self._PATH_LOGS = self.get_value_from_config_file("host_logs_path")
-			self._TEAM_1_PLAYER_NAMES = self._get_team_1_player_names_from_config_file()
-			self._CLIENT_TEAM = int(self.get_value_from_config_file("client_team"))
-			self._PATH_SOUNDS = "sound\\"
-			self._PATH_SOUNDS += self.get_value_from_config_file("sounds_folder")
-			self._PATH_SOUNDS += "\\"
+		
+		# Load options (these are documented in the readme file)
+		
+		self._PATH_LOGS = self.get_value_from_config_file("host_logs_path")
+		if self._PATH_LOGS[len(self._PATH_LOGS) - 1] is not "\\": # Make sure that the path log ends with a backslash
+			self._PATH_LOGS += "\\"
+		
+		self._TEAM_1_PLAYER_NAMES = self._get_team_1_player_names_from_config_file()
+		
+		self._CLIENT_TEAM = int(self.get_value_from_config_file("client_team"))
+		if self._CLIENT_TEAM > 2:
+			self._CLIENT_TEAM = 2
+		
+		self._PATH_SOUNDS = "sound\\"
+		self._PATH_SOUNDS += self.get_value_from_config_file("sounds_folder")
+		self._PATH_SOUNDS += "\\"
 			
-			# Error checking
-			if self._START_METHOD is not "host" and self._START_METHOD is not "join":
-				raise RuntimeError("config.txt start type should be host or join.")
-			if self._PATH_LOGS[len(self._PATH_LOGS) - 1] is not "\\": # Make sure that the path log ends with a backslash
-				self._PATH_LOGS += "\\"
-			if self._CLIENT_TEAM is not 1 and self._CLIENT_TEAM is not 2:
-				raise RuntimeError("config.txt client_team should be 1 or 2.")
-		except BaseException as e:
-			print("Error reading the config file: {}".format(e))
+		self._readFileIntervalInSeconds = 1
+		self._running = True # Main loop condition
+		
+		self._speaker = speaker.Speaker(self, int(self.get_value_from_config_file("host_round_time")))
 	
 	# Looks the key from the config file and returns it's value
 	def get_value_from_config_file(self, key):
-		try:
-			file = open("config.txt", "r")
-			for line in file:
-				if re.search("^" + key, line):
-					lineArray = line.split("=")
-					lineArray[1] = lineArray[1].strip() # Remove spaces
-					result = lineArray[1]
-					return result
-			return None
-		except BaseException as e:
-			print("Error reading the config file: {}".format(e))
+		file = open("config.txt", "r")
+		for line in file:
+			if re.search("^" + key, line):
+				lineArray = line.split("=")
+				lineArray[1] = lineArray[1].strip() # Remove spaces
+				result = lineArray[1]
+				return result
+		return None
 	
 	def get_client_team(self):
 		return self._CLIENT_TEAM
@@ -85,15 +76,22 @@ class Program():
 	
 	# Executes the program
 	def exec(self):
-		# Host / Join?	
-		if self._START_METHOD == "host":
+		# Host / Join?
+		startMethod = self.get_value_from_config_file("start")
+				
+		if startMethod == "host" or startMethod == "local":
 			self._host()
-		elif self._START_METHOD == "join":
+		elif startMethod == "join":
 			self._join()
 		
 	def _host(self):
-		self._start_thread_network_manager("host")
+		if self.get_value_from_config_file("start") == "host":
+			# Start the network manager and run it in it's own thread
+			networkManagerThread = NetworkManagerThread()
+			networkManagerThread.init(self, "host")
+			networkManagerThread.start()
 		
+		# Start reading the log file forever
 		fileName =  self._find_most_recently_edited_log_file()
 		while self._running:
 			self._read_file(fileName)
@@ -101,19 +99,16 @@ class Program():
 			time.sleep(self._readFileIntervalInSeconds)
 			
 		print("Quitting...")
-		self._networkManager.disconnect()
+		self._networkManager.disconnect() # Will also end the server listening thread.
 			
 	def _join(self):
-		self._start_thread_network_manager("join")
-		
-	# @param method string "host" or "join"
-	def _start_thread_network_manager(self, method):
+		# Start the network manager and run it in it's own thread
 		networkManagerThread = NetworkManagerThread()
-		networkManagerThread.init(self, method)
+		networkManagerThread.init(self, "join")
 		networkManagerThread.start()
 		
-	# Finds the file that has been edited most recently (and it's not too old)
 	def _find_most_recently_edited_log_file(self):
+		# Find the file that has been edited most recently (and it's not too old)
 		print("Finding the most suitable log file...")
 		
 		mostRecentlyEditedFileName = None
@@ -128,7 +123,6 @@ class Program():
 						mostRecentlyEditedFileName = fileName
 				else:
 					print("Found file {}, but it is too old. Searching more...".format(fileName))
-			
 			# File not found, pause and try again
 			time.sleep(2)
 			
@@ -138,22 +132,25 @@ class Program():
 	# Opens the file and processes it. Remembers how many lines have been processed and only affects the new lines
 	def _read_file(self, fileName):
 		print("{} Reading log file...".format(time.strftime("%H:%M:%S")))
-		unreadLines = [] 
+		
+		# Read the file and store unprocessed lines in to array
+		fileContent = [] 
 		
 		try:
 			file = open(self._PATH_LOGS + fileName, "r")
-			unreadLines = [] 
+			fileContent = [] 
 			i = 1
 			for line in file:
-				if i > self._readLines: # This line has not been read yet
-					unreadLines.append(line)
+				if i > self._readLines:
+					fileContent.append(line)
 					self._readLines += 1
 				i += 1
 			file.close()
 		except BaseException as e:
-			print("Error reading the log file: {}".format(e))
+			print("Error: {}".format(e))
 		
-		for line in unreadLines: # Process the new lines
+		# Process the new lines
+		for line in fileContent:
 			# print("{} New line found: {}".format(time.strftime("%H:%M:%S"), line), end="")
 			self._scan_line(line)
 			
@@ -179,12 +176,13 @@ class Program():
 	
 	# Constructs Regex from team 1 player names in the following format:
 	# (player1|player2|player2)
+	# This method is used when scalling lines
 	def _construct_regex_team1(self):
 		regEx = "("
 		currentName = 1
 		for name in self._TEAM_1_PLAYER_NAMES:
 			regEx += name
-			if currentName is not len(self._TEAM_1_PLAYER_NAMES): # Not the last name
+			if currentName is not len(self._TEAM_1_PLAYER_NAMES): # Do we have to add "|" in the end?
 				regEx += "|"
 			currentName += 1
 		regEx += ")"
@@ -192,88 +190,65 @@ class Program():
 	
 	# Scans a single line and searches for interesting events
 	def _scan_line(self, line):
-		# Start from the common ones to save performance
-		if self._scan_line_for_team2_teamkiller(line):
-			return True
-		if self._scan_line_for_team1_teamkiller(line):
-			return True
-		if self._scan_line_for_team1_kills_enemy_headshot(line):
-			return True
-		if self._scan_line_for_team1_kills_enemy_knife(line):
-			return True
-		if self._scan_line_for_team1_kills_enemy_knife(line):
-			return True
-		if self._scan_line_for_team2_kills_enemy_knife(line):
-			return True
-		if self._scan_line_for_round_start(line):
-			return True
-		if self._scan_line_for_round_end(line):
-			return True
-		if self._scan_line_for_score_ct(line):
-			return True
-		if self._scan_line_for_score_t(line):
-			return True
-		if self._scan_line_for_team1_player_joins_team(line):
-			return True
-		if self._scan_line_for_setting_round_time(line):
-			return True
-		if self._scan_line_for_bomb_plant(line):
-			return True
-		if self._scan_line_for_loading_map(line):
-			return True
-		if self._scan_line_for_game_end(line):
-			return True
-		return False
 		
-	def _scan_line_for_team2_teamkiller(self, line):
-		# Actually the RegEx thinks that someone, who does not play in team 1, killed someone who does not play in team 1.
-		# However, it is very likely that the player was team 2 player and he killed team 2 player.
+		# *************************************************
+		# ************** Team 1 teamkiller ****************
+		# *************************************************
 		
-		regEx = ".+ killed .+"
-		match = re.search(regEx, line)
-		if match:
-			# This is a good match if there is NO team 1 player name BEFORE or AFTER the word killed
-			if not self._is_team_1_player_the_killer(match.group(0)) \
-			and not self._is_team_1_player_the_victim(match.group(0)):
-				print("Catch: {}".format(line))
-				if self._CLIENT_TEAM == 1:
-					self._speaker.say(speaker.Speaker.SOUND_ID_TEAMKILLER_CLIENT_TEAM)
-				elif self._CLIENT_TEAM == 2:
-					self._speaker.say(speaker.Speaker.SOUND_ID_TEAMKILLER_ENEMY_TEAM)
-				return True
-		return False
-			
-	def _scan_line_for_team1_teamkiller(self, line):	
 		regEx = self._construct_regex_team1()
 		regEx += ".+ killed .+"
 		regEx += self._construct_regex_team1()
 		match = re.search(regEx, line)
 		if match:
 			print("Catch: {}".format(line))
-			if self._CLIENT_TEAM == 1:
+			if self._CLIENT_TEAM == 1: # The speacher's comment depends on the player's team
 				self._speaker.say(speaker.Speaker.SOUND_ID_TEAMKILLER_CLIENT_TEAM)
 			elif self._CLIENT_TEAM == 2:
 				self._speaker.say(speaker.Speaker.SOUND_ID_TEAMKILLER_ENEMY_TEAM)
-				return True
-		return False
-				
-	def _scan_line_for_team1_kills_enemy_headshot(self, line):
+			return # Match found, we assume that there are not multiple matches in one line
+		
+		# *************************************************
+		# ************** Team 2 teamkiller ****************
+		# *************************************************
+		
+		# Actually the RegEx thinks that someone, who does not play in team 1, killed someone, who does not play in team 1. However, it is very likely that the player was team 2 player and he killed team 2 player.
+		
+		regEx = ".+ killed .+"
+		match = re.search(regEx, line)
+		if match:
+			# If there is a team 1 player name BEFORE the word killed, this can not be a good match
+			# If there is a team 1 player name AFTER the word killed, this can not be a good match
+			if not self._is_team_1_player_the_killer(match.group(0)) and not self._is_team_1_player_the_victim(match.group(0)):
+				print("Catch: {}".format(line))
+				if self._CLIENT_TEAM == 1: # The speacher's comment depends on the player's team
+					self._speaker.say(speaker.Speaker.SOUND_ID_TEAMKILLER_CLIENT_TEAM)
+				elif self._CLIENT_TEAM == 2:
+					self._speaker.say(speaker.Speaker.SOUND_ID_TEAMKILLER_ENEMY_TEAM)
+				return
+		
+		# *************************************************
+		# ********* Team 1 kills enemy (headshot) *********
+		# *************************************************
+		
 		regEx = self._construct_regex_team1()
 		regEx += ".+ killed .+"
 		regEx += "headshot"
 		match = re.search(regEx, line)
 		
 		if match:
+			# Check that there is NO team 1 player name AFTER the word killed
 			if not self._is_team_1_player_the_victim(match.group(0)):
 				print("Catch: {}".format(line))
-				if self._CLIENT_TEAM == 1:
+				if self._CLIENT_TEAM == 1: # The speacher's comment depends on the player's team
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM)
 				elif self._CLIENT_TEAM == 2:
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM)
-				return True
-		return False
-					
-	def _scan_line_for_team2_kills_enemy_headshot(self, line):
+				return
+		
+		# *************************************************
+		# ********* Team 2 kills enemy (headshot) *********
+		# *************************************************
+		
 		# Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
 		
 		regEx = ".+ killed .+"
@@ -282,16 +257,19 @@ class Program():
 		match = re.search(regEx, line)
 		
 		if match:
+			# Check that there is NO team 1 player BEFORE the word killed
 			if not self._is_team_1_player_the_killer(match.group(0)):
 				print("Catch: {}".format(line))
-				if self._CLIENT_TEAM == 1: #
+				if self._CLIENT_TEAM == 1: # The speacher's comment depends on the player's team
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM)
 				elif self._CLIENT_TEAM == 2:
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM)
-				return True
-		return False
-				
-	def _scan_line_for_team1_kills_enemy_knife(self, line):
+				return
+		
+		# *************************************************
+		# ********** Team 1 kills enemy (knife) ***********
+		# *************************************************
+		
 		regEx = self._construct_regex_team1()
 		regEx += ".+ killed .+"
 		regEx += "with.+"
@@ -299,16 +277,19 @@ class Program():
 		match = re.search(regEx, line)
 		
 		if match:
+			# Check that there is NO team 1 player AFTER the word killed
 			if not self._is_team_1_player_the_victim(match.group(0)):
 				print("Catch: {}".format(line))
-				if self._CLIENT_TEAM == 1:
+				if self._CLIENT_TEAM == 1: # The speacher's comment depends on the player's team
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_KNIFE_CLIENT_TEAM)
 				elif self._CLIENT_TEAM == 2:
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_KNIFE_ENEMY_TEAM)
-				return True
-		return False
-				
-	def _scan_line_for_team2_kills_enemy_knife(self, line):
+				return
+		
+		# *************************************************
+		# ********** Team 2 kills enemy (knife) ***********
+		# *************************************************
+		
 		# Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
 		
 		regEx = ".+ killed .+"
@@ -318,18 +299,21 @@ class Program():
 		match = re.search(regEx, line)
 		
 		if match:
+			# Check that there is NO team 1 player BEFORE the word killed
 			if not self._is_team_1_player_the_killer(match.group(0)):
 				print("Catch: {}".format(line))
-				if self._CLIENT_TEAM == 1:
+				if self._CLIENT_TEAM == 1: # The speacher's comment depends on the player's team
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_KNIFE_ENEMY_TEAM)
 				elif self._CLIENT_TEAM == 2:
 					self._speaker.say(speaker.Speaker.SOUND_ID_KILL_KNIFE_CLIENT_TEAM)
-				return True
-		return False
-				
-	def _scan_line_for_round_start(self, line):
+				return
+		
+		# ***********************************************
+		# ****************  Round Start *****************
+		# ***********************************************
+		
 		regEx = ".*World triggered.*"
-		regEx += "Round_Start" # does not include buytime
+		regEx += "Round_Start" # does not include buytime)
 		match = re.search(regEx, line)
 		
 		if match:
@@ -340,10 +324,12 @@ class Program():
 					self._speaker.say(self._speaker.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING)
 			elif self._speaker.get_client_team_points() < self._speaker.get_enemy_team_points():
 					self._speaker.say(self._speaker.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING)
-			return True
-		return False
-			
-	def _scan_line_for_round_end(self, line):
+			return
+		
+		# ***********************************************
+		# *****************  Round End ******************
+		# ***********************************************
+		
 		regEx = ".*World triggered.*"
 		regEx += "Round_End"
 		match = re.search(regEx, line)
@@ -351,14 +337,30 @@ class Program():
 		if match:
 			print("Catch: {}".format(line))
 			self._speaker.set_round_start_time(0)
-			return True
-		return False
+			return
 		
-	def _scan_line_for_score_t(self, line):
+		# ***********************************************
+		# ****************** Score **********************
+		# ***********************************************
+		
+		# L 08/01/2013 - 23:33:38: Team "CT" scored "1" with "5" players
 		# L 08/01/2013 - 23:33:38: Team "TERRORIST" scored "4" with "5" players
 		
 		regEx = "Team.+"
-		regEx += "\"TERRORIST\".+"
+		regEx += "\"CT\".+"
+		regEx += "scored.+?"
+		regEx += "\d"
+		match = re.search(regEx, line)
+		if match:
+			print("Catch: {}".format(line))
+			# We need to get the score points. Do this by selecting the first digit from the match
+			match2 = re.search("\d", match.group(0))
+			if (match2):
+				self._speaker.set_team_points("ct", int(match2.group(0)))
+				return
+		
+		regEx = "Team.+"
+		regEx += "\"TERRORIST\".+" # Actually this matches Team CT too
 		regEx += "scored.+?"
 		regEx += "\d"
 		match = re.search(regEx, line)
@@ -368,28 +370,19 @@ class Program():
 			# We need to get the score points. Do this by selecting the first digit from the match
 			match2 = re.search("\d", match.group(0))
 			self._speaker.set_team_points("t", int(match2.group(0)))
-			return True
-		return False
-			
-	def _scan_line_for_score_ct(self, line):
-		# L 08/01/2013 - 23:33:38: Team "CT" scored "1" with "5" players
+			return
 		
-		regEx = "Team.+"
-		regEx += "\"CT\".+"
-		regEx += "scored.+?"
-		regEx += "\d"
-		match = re.search(regEx, line)
+		# ***********************************************
+		# ************ Player plays on team *************
+		# ***********************************************
 		
-		if match:
-			print("Catch: {}".format(line))
-			# We need to get the score points. Do this by selecting the first digit from the match
-			match2 = re.search("\d", match.group(0))
-			if (match2):
-				self._speaker.set_team_points("ct", int(match2.group(0)))
-				return True
-		return False
-				
-	def _scan_line_for_team1_player_joins_team(self, line):
+		# Just to make sure if the "switched from team" has not been catched.
+		# TODO Will be implemented in the future
+		
+		# ***********************************************
+		# ************** Player joins team **************
+		# ***********************************************
+	
 		# Team 1 player joins T
 		regEx = self._construct_regex_team1()
 		regEx += ".+switched from team.+"
@@ -399,10 +392,9 @@ class Program():
 		
 		if match:
 			print("Catch: {}".format(line))
-			# We can assume that all team 1 players play on T
+			# We can assume that all team 1 players plays on T
 			self._speaker.set_team_side(1, "t")
 			self._speaker.set_team_side(2, "ct")
-			return True
 		
 		# Team 1 player joins CT
 		regEx = self._construct_regex_team1()
@@ -413,13 +405,15 @@ class Program():
 		
 		if match:
 			print("Catch: {}".format(line))
-			# We can assume that all team 1 players play on CT
+			# We can assume that all team 1 players plays on CT
 			self._speaker.set_team_side(1, "ct")
 			self._speaker.set_team_side(2, "t")
-			return True
-		return False
-			
-	def _scan_line_for_setting_round_time(self, line):
+			return
+		
+		# ***********************************************
+		# ****************** Settings *******************
+		# ***********************************************
+		
 		regEx = "mp_roundtime.+?\d"
 		match = re.search(regEx, line)
 		
@@ -432,10 +426,12 @@ class Program():
 				roundTime *= 60
 				self._speaker.set_round_time(roundTime)
 				print("Round time changed to {} seconds".format(roundTime))
-			return True
-		return False
-				
-	def _scan_line_for_bomb_plant(self, line):
+				return
+			
+		# ***********************************************
+		# **************** Bomb plant *******************
+		# ***********************************************
+		
 		regEx = "triggered.+"
 		regEx += "Planted_The_Bomb"
 		match = re.search(regEx, line)
@@ -444,28 +440,31 @@ class Program():
 			print("Catch: {}".format(line))
 			if self._speaker.get_team_side(self._CLIENT_TEAM) == "t":
 				self._speaker.say(speaker.Speaker.SOUND_ID_BOMB_PLANTED_CLIENT_TEAM)
-			return True
-		return False
-			
-	def _scan_line_for_loading_map(self, line):
+			return
+		
+		# ***********************************************
+		# ****************** End map ********************
+		# ***********************************************
+		
 		regEx = "Loading map"
 		match = re.search(regEx, line)
 		
 		if match:
 			print("Catch: {}".format(line))
 			self._speaker.reset_points();
-			return True
-		return False
-			
-	def _scan_line_for_game_end(self, line):
+			return
+		
+		# ***********************************************
+		# ********************* End *********************
+		# ***********************************************
+		
 		regEx = "Log file closed"
 		match = re.search(regEx, line)
 		
 		if match:
 			print("Catch: {}".format(line))
 			self._running = False
-			return True
-		return False
+			return
 		
 class NetworkManagerThread(Thread):
 	# @param method string "host" or "join"
@@ -474,6 +473,9 @@ class NetworkManagerThread(Thread):
 		self._method = method
 	def run(self):
 		if self._method == "host":
-			self._program.get_network_manager().start_host(self._HOST_PORT)
+			port = int(self._program.get_value_from_config_file("host_port"))
+			self._program.get_network_manager().start_host(port)
 		elif self._method == "join":
-			self._program.get_network_manager().start_join(self._JOIN_IP, self._HOST_PORT)
+			address = self._program.get_value_from_config_file("join_ip")
+			port = int(self._program.get_value_from_config_file("host_port"))
+			self._program.get_network_manager().start_join(address, port)
