@@ -294,13 +294,13 @@ class Speaker():
 		return False
 	
 	# This method will ask Network Manager to send a PLAY_SOUND command to all clients
-	# @param fileSameTeam string Audio file name to be sent for the clients who play in the same team as host
-	# @param fileDifferentTeam string Audio file name to be sent for the clients who play in different team than host
-	def _send_play_sound_command_to_clients(self, file_same_team = None, fileDifferentTeam = None):
+	# @param file_Same_team string Audio file name to be sent for the clients who play in the same team as host
+	# @param file_different_team string Audio file name to be sent for the clients who play in different team than host
+	def _send_play_sound_command_to_clients(self, file_same_team = None, file_different_team = None):
 		if file_same_team is not None:
 			self._program.get_network_manager().send_message_to_clients_team("PLAY_SOUND|" + file_same_team, self._program.get_client_team())
-		if fileDifferentTeam is not None:
-			self._program.get_network_manager().send_message_to_clients_team("PLAY_SOUND|" + fileDifferentTeam, self._program.get_enemy_team())
+		if file_different_team is not None:
+			self._program.get_network_manager().send_message_to_clients_team("PLAY_SOUND|" + file_different_team, self._program.get_enemy_team())
 	
 	# Play an audio file related to the given eventId. Will also send the play audio command to clients
 	def handle_event(self, event_id):
@@ -450,20 +450,20 @@ class Speaker():
 	
 	# @param audioFileClient string The file to be played locally and to be send to clients who play in the same team than host
 	# @param audioFileEnemy string The file to be sent to client who play in different team than the host
-	def _handle_event_audio_files(self, audioFileClient, audioFileEnemy=None):
-			self.play_file(self._program.get_path_sounds(), audioFileClient) # Play audio file locally
+	def _handle_event_audio_files(self, audio_file_client, audio_file_enemy=None):
+			self.play_file(self._program.get_path_sounds(), audio_file_client) # Play audio file locally
 			if self._program.get_network_manager().is_host():
-				self._send_play_sound_command_to_clients(audioFileClient, audioFileEnemy)
+				self._send_play_sound_command_to_clients(audio_file_client, audio_file_enemy)
 		
 	def play_file(self, path, file):
 		file_path = path + file
-		if (not self._is_currently_saying_something()):
+		if not self._is_currently_saying_something():
 			self._lastFileDurationInSeconds = self._get_file_duration(file_path)
 			self._lastTimeStartedSayingInSeconds = time.time()
 			winsound.PlaySound(file_path, winsound.SND_ASYNC)
 			
-	def _get_file_duration(self, filePath):
-		with contextlib.closing(wave.open(filePath,'r')) as f:
+	def _get_file_duration(self, file_path):
+		with contextlib.closing(wave.open(file_path,'r')) as f:
 			frames = f.getnframes()
 			rate = f.getframerate()
 			duration = frames / float(rate)
