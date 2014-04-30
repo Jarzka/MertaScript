@@ -1,0 +1,8 @@
+src/.idea
+src/.settings
+src/__pycache__
+
+source/.project
+source/.pydevproject
+
+*.pyc
