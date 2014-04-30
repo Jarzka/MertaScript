@@ -1,7 +1,6 @@
-src/.idea
-src/.settings
-src/__pycache__
-
+source/.idea
+source/.settings
+source/__pycache__
 source/.project
 source/.pydevproject
 
