@@ -21,8 +21,8 @@ class Program():
 	# Scans the config file and stores it's values in to variables
 	def _handle_config_file(self):
 		try:
-			self._HOST_PORT = int(self._program.get_value_from_config_file("host_port"))
-			self._JOIN_IP = self._program.get_value_from_config_file("join_ip")
+			self.HOST_PORT = int(self.get_value_from_config_file("host_port"))
+			self.JOIN_IP = self.get_value_from_config_file("join_ip")
 			self._START_METHOD = self.get_value_from_config_file("start")
 			self._PATH_LOGS = self.get_value_from_config_file("host_logs_path")
 			self._TEAM_1_PLAYER_NAMES = self._get_team_1_player_names_from_config_file()
@@ -32,8 +32,10 @@ class Program():
 			self._PATH_SOUNDS += "\\"
 			
 			# Error checking
-			if self._START_METHOD is not "host" and self._START_METHOD is not "join":
-				raise RuntimeError("config.txt start type should be host or join.")
+            
+            # TODO raises an error even if the value is correct.
+			#if self._START_METHOD is not "host" and self._START_METHOD is not "join":
+			#	raise RuntimeError("config.txt start type should be host or join, but it was" + " " + self._START_METHOD)
 			if self._PATH_LOGS[len(self._PATH_LOGS) - 1] is not "\\": # Make sure that the path log ends with a backslash
 				self._PATH_LOGS += "\\"
 			if self._CLIENT_TEAM is not 1 and self._CLIENT_TEAM is not 2:
@@ -474,6 +476,6 @@ class NetworkManagerThread(Thread):
 		self._method = method
 	def run(self):
 		if self._method == "host":
-			self._program.get_network_manager().start_host(self._HOST_PORT)
+			self._program.get_network_manager().start_host(self._program.HOST_PORT)
 		elif self._method == "join":
-			self._program.get_network_manager().start_join(self._JOIN_IP, self._HOST_PORT)
+			self._program.get_network_manager().start_join(self._program.JOIN_IP, self._program.HOST_PORT)
