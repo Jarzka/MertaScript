@@ -51,6 +51,7 @@ class Program():
                 if re.search("^" + key, line):
                     line_array = line.split("=")
                     line_array[1] = line_array[1].strip() # Remove spaces
+                    line_array[1] = line_array[1].strip('\n') # Remove new lines
                     result = line_array[1]
                     return result
             return None
@@ -71,7 +72,8 @@ class Program():
         for line in file:
             if re.search("^host_team_1_player_names", line):
                 line_array = line.split("=")
-                line_array[1] = line_array[1].replace(" ", "")
+                line_array[1] = line_array[1].replace(" ", "") # Remove spaces
+                line_array[1] = line_array[1].strip('\n') # Remove new lines
                 result = line_array[1].split(",")
                 return result
         return None
@@ -162,7 +164,7 @@ class Program():
     # This method is used when trying to guess in which team a killer and a victim play
     def _is_team_1_player_the_killer(self, string):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".+ killed "
+        reg_ex += ".+killed.+"
         match = re.search(reg_ex, string)
         if match:
             return True
@@ -171,7 +173,7 @@ class Program():
         
     # This method is used when trying to guess in which team a killer and a victim play
     def _is_team_1_player_the_victim(self, string):
-        reg_ex = " killed .+"
+        reg_ex = ".+killed.+"
         reg_ex += self._construct_regex_team1()
         match = re.search(reg_ex, string)
         if match:
@@ -195,13 +197,13 @@ class Program():
     # Scans a single line and searches for interesting events
     def _scan_line(self, line):
         # Start from the common ones to save performance
-        if self._scan_line_for_team2_teamkiller(line):
-            return True
         if self._scan_line_for_team1_teamkiller(line):
+            return True
+        if self._scan_line_for_team2_teamkiller(line):
             return True
         if self._scan_line_for_team1_kills_enemy_headshot(line):
             return True
-        if self._scan_line_for_team1_kills_enemy_knife(line):
+        if self._scan_line_for_team2_kills_enemy_headshot(line):
             return True
         if self._scan_line_for_team1_kills_enemy_knife(line):
             return True
@@ -229,11 +231,12 @@ class Program():
 
     def _scan_line_for_team1_teamkiller(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".+ killed .+"
+        reg_ex += ".+killed.+"
         reg_ex += self._construct_regex_team1()
         match = re.search(reg_ex, line)
         if match:
             print("Catch: {}".format(line))
+            print("Teamkiller in team 1!")
             if self._CLIENT_TEAM == 1:
                 self._commentator.handle_event(commentator.Commentator.SOUND_ID_TEAMKILLER_CLIENT_TEAM)
             elif self._CLIENT_TEAM == 2:
@@ -245,13 +248,14 @@ class Program():
         # Actually the RegEx thinks that someone, who does not play in team 1, killed someone who does not play in team 1.
         # However, it is very likely that the player was team 2 player and he killed team 2 player.
         
-        reg_ex = ".+ killed .+"
+        reg_ex = ".+killed.+"
         match = re.search(reg_ex, line)
         if match:
             # This is a good match if there is NO team 1 player name BEFORE or AFTER the word killed
             if not self._is_team_1_player_the_killer(match.group(0)) \
             and not self._is_team_1_player_the_victim(match.group(0)):
                 print("Catch: {}".format(line))
+                print("Teamkiller in team 2!")
                 if self._CLIENT_TEAM == 1:
                     self._commentator.handle_event(commentator.Commentator.SOUND_ID_TEAMKILLER_ENEMY_TEAM)
                 elif self._CLIENT_TEAM == 2:
@@ -261,7 +265,7 @@ class Program():
                 
     def _scan_line_for_team1_kills_enemy_headshot(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".+ killed .+"
+        reg_ex += ".+killed.+"
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
         
@@ -278,7 +282,7 @@ class Program():
     def _scan_line_for_team2_kills_enemy_headshot(self, line):
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
         
-        reg_ex = ".+ killed .+"
+        reg_ex = ".+killed.+"
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+headshot"
         match = re.search(reg_ex, line)
@@ -295,7 +299,7 @@ class Program():
                 
     def _scan_line_for_team1_kills_enemy_knife(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".+ killed .+"
+        reg_ex += ".+killed.+"
         reg_ex += "with.+"
         reg_ex += "knife"
         match = re.search(reg_ex, line)
@@ -313,7 +317,7 @@ class Program():
     def _scan_line_for_team2_kills_enemy_knife(self, line):
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
         
-        reg_ex = ".+ killed .+"
+        reg_ex = ".+killed.+"
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+with.+"
         reg_ex += "knife"
@@ -330,7 +334,7 @@ class Program():
         return False
                 
     def _scan_line_for_round_start(self, line):
-        reg_ex = ".*World triggered.*"
+        reg_ex = "World triggered.*"
         reg_ex += "Round_Start" # does not include buytime
         match = re.search(reg_ex, line)
         
@@ -368,7 +372,7 @@ class Program():
         if match:
             print("Catch: {}".format(line))
             # We need to get the score points. Do this by selecting the first digit from the match
-            match2 = re.search("\d", match.group(0))
+            match2 = re.search("\d+", match.group(0))
             self._commentator.set_team_points("t", int(match2.group(0)))
             return True
         return False
@@ -385,7 +389,7 @@ class Program():
         if match:
             print("Catch: {}".format(line))
             # We need to get the score points. Do this by selecting the first digit from the match
-            match2 = re.search("\d", match.group(0))
+            match2 = re.search("\d+", match.group(0))
             if match2:
                 self._commentator.set_team_points("ct", int(match2.group(0)))
                 return True
