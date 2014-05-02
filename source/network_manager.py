@@ -70,11 +70,11 @@ class NetworkManager():
                 self._socket = socket.socket()
                 self._socket.connect((ip, port))
             except socket.error as e:
-                print ("Could not join: {}". format(e))
+                print ("Connection failed: {}". format(e))
                 print("Trying again...")
                 continue
             
-            print ("Host address resolved: {}".format(self._socket.getsockname()))
+            print ("Connection established: {}".format(self._socket.getsockname()))
             
             # Send team info to the server
             
