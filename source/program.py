@@ -43,7 +43,7 @@ class Program():
         except BaseException as e:
             print("Error reading the config file: {}".format(e))
     
-    # Looks the key from the config file and returns it's value
+    # Searches the key from the config file and returns it's value
     def get_value_from_config_file(self, key):
         try:
             file = open("config.txt", "r")
@@ -84,7 +84,7 @@ class Program():
     def get_path_sounds(self):
         return self._PATH_SOUNDS
     
-    def get_speaker(self):
+    def get_commentator(self):
         return self._commentator
     
     # Executes the program

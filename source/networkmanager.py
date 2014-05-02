@@ -106,7 +106,7 @@ class NetworkManager():
             print(array_message[1])
         elif re.search("^PLAY_SOUND\|.+", message):
             array_message = message.split("|")
-            self._program.get_speaker().play_file(self._program.get_path_sounds(), array_message[1])
+            self._program.get_commentator().play_file(self._program.get_path_sounds(), array_message[1])
             print("Playing sound \"{}\"".format(array_message[1]))
         elif re.search("^TEAM|.+", message):
             array_message = message.split("|")
