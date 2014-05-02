@@ -64,14 +64,15 @@ class NetworkManager():
 
     def start_join(self, ip, port):
         while True: # Try to join again if the connection is lost
-            print("Joining game...")
+            print("Connecting to" + ": " + str(ip) + " " + str(port))
             
             try: 
                 self._socket = socket.socket()
                 self._socket.connect((ip, port))
             except socket.error as e:
                 print ("Could not join: {}". format(e))
-                return False
+                print("Trying again...")
+                continue
             
             print ("Host address resolved: {}".format(self._socket.getsockname()))
             

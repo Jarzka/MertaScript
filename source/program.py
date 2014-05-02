@@ -6,14 +6,14 @@ import re
 import time
 import commentator
 import os.path
-import networkmanager
+import network_manager
 from threading import Thread
     
 class Program():
     def __init__(self):
         self._handle_config_file()
         self._readLines = 0 # How many lines have been read from the log file
-        self._networkManager = networkmanager.NetworkManager(self)
+        self._networkManager = network_manager.NetworkManager(self)
         self._commentator = commentator.Commentator(self, int(self.get_value_from_config_file("host_round_time")))
         self._readFileIntervalInSeconds = 1 # How often the program scans the log file
         self._running = True # Main loop condition
