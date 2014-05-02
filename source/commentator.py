@@ -1,7 +1,7 @@
 # This is the commentator class.
 # - Check that all audio files exist
 # - Play audio files
-# - Keeps the memory of team points and round time
+# - Knows team points and round time
 
 import winsound
 import wave
