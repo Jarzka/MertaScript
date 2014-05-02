@@ -296,11 +296,13 @@ class Speaker():
 	# This method will ask Network Manager to send a PLAY_SOUND command to all clients
 	# @param file_Same_team string Audio file name to be sent for the clients who play in the same team as host
 	# @param file_different_team string Audio file name to be sent for the clients who play in different team than host
-	def _send_play_sound_command_to_clients(self, file_same_team = None, file_different_team = None):
-		if file_same_team is not None:
-			self._program.get_network_manager().send_message_to_clients_team("PLAY_SOUND|" + file_same_team, self._program.get_client_team())
-		if file_different_team is not None:
-			self._program.get_network_manager().send_message_to_clients_team("PLAY_SOUND|" + file_different_team, self._program.get_enemy_team())
+	def _send_play_sound_command_to_clients(self, file_client_team = None, file_enemy_team = None):
+		if file_client_team is not None:
+			self._program.get_network_manager().send_message_to_clients("PLAY_SOUND|" + file_client_team,
+                                                                             self._program.get_client_team())
+		if file_enemy_team is not None:
+			self._program.get_network_manager().send_message_to_clients("PLAY_SOUND|" + file_enemy_team,
+                                                                             self._program.get_enemy_team())
 	
 	# Play an audio file related to the given eventId. Will also send the play audio command to clients
 	def handle_event(self, event_id):
