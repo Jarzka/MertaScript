@@ -16,7 +16,7 @@ class Program():
         self._network_manager = network_manager.NetworkManager(self)
         self._commentator = commentator.Commentator(self, int(self.get_value_from_config_file("host_round_time")))
         self._read_file_interval_in_seconds = 1 # How often the program scans the log file
-        self._check_newest_log_file_interval_in_seconds = 15
+        self._check_newest_log_file_interval_in_seconds = * 60
         self._check_newest_log_file_timestamp_in_seconds = 0
         self._running = True # Main loop condition
         self._log_file_max_age_in_seconds = 5 * 60
