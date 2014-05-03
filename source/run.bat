@@ -1,1 +1,1 @@
-py "C:\CS for CSGO\main.py"
+python main.py
