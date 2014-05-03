@@ -54,7 +54,7 @@ class Commentator():
     def __init__(self, program, round_time):
         self._started_saying_something_timestamp_in_seconds = 0
         self._last_file_duration_in_seconds = 0
-        self._round_start_timestamp = 0
+        self._round_start_timestamp_in_seconds = 0
         self._team1_side = "" # ct or t
         self._team2_side = ""
         self._team1_points = 0
@@ -477,18 +477,18 @@ class Commentator():
         
     # @return Time left in seconds
     def _get_round_time_left(self):
-        if self._round_start_timestamp is not 0:
+        if self._round_start_timestamp_in_seconds is not 0:
             return int(self._round_time_in_seconds -  self._get_match_time_passed())
         return -1
         
     # @return Match time passed in seconds
     def _get_match_time_passed(self):
-        if self._round_start_timestamp is not 0:
-            return int(time.time() - self._round_start_timestamp)
+        if self._round_start_timestamp_in_seconds is not 0:
+            return int(time.time() - self._round_start_timestamp_in_seconds)
         return -1
     
     def set_round_start_time(self, time_in_seconds):
-        self._round_start_timestamp = time_in_seconds
+        self._round_start_timestamp_in_seconds = time_in_seconds
     
     def reset_points(self):
         print("Reseting team points")
