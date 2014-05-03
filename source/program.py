@@ -12,11 +12,22 @@ from threading import Thread
 class Program():
     def __init__(self):
         self._handle_config_file()
-        self._readLines = 0 # How many lines have been read from the log file
-        self._networkManager = network_manager.NetworkManager(self)
+        self._read_lines = 0 # How many lines have been read from the log file
+        self._network_manager = network_manager.NetworkManager(self)
         self._commentator = commentator.Commentator(self, int(self.get_value_from_config_file("host_round_time")))
-        self._readFileIntervalInSeconds = 1 # How often the program scans the log file
+        self._read_file_interval_in_seconds = 1 # How often the program scans the log file
+        self._check_newest_log_file_interval_in_seconds = 15
+        self._check_newest_log_file_timestamp_in_seconds = 0
         self._running = True # Main loop condition
+        self._log_file_max_age_in_seconds = 5 * 60
+
+    # Executes the program
+    def exec(self):
+        # Host / Join?
+        if self._START_METHOD == "host":
+            self._host()
+        elif self._START_METHOD == "join":
+            self._join()
 
     # Scans the config file and stores it's values in to variables
     def _handle_config_file(self):
@@ -32,10 +43,9 @@ class Program():
             self._PATH_SOUNDS += "\\"
             
             # Error checking
-            
-            # TODO raises an error even if the value is correct. I don't the reason for this.
-            #if self._START_METHOD is not "host" and self._START_METHOD is not "join":
-            #    raise RuntimeError("config.txt start type should be host or join, but it was" + " " + self._START_METHOD)
+
+            if not self._START_METHOD == "host" and not self._START_METHOD == "join":
+                raise RuntimeError("config.txt start type should be host or join, but it was" + " " + self._START_METHOD)
             if self._PATH_LOGS[len(self._PATH_LOGS) - 1] is not "\\": # Make sure that the path log ends with a backslash
                 self._PATH_LOGS += "\\"
             if self._CLIENT_TEAM is not 1 and self._CLIENT_TEAM is not 2:
@@ -79,33 +89,26 @@ class Program():
         return None
     
     def get_network_manager(self):
-        return self._networkManager
+        return self._network_manager
     
     def get_path_sounds(self):
         return self._PATH_SOUNDS
     
     def get_commentator(self):
         return self._commentator
-    
-    # Executes the program
-    def exec(self):
-        # Host / Join?    
-        if self._START_METHOD == "host":
-            self._host()
-        elif self._START_METHOD == "join":
-            self._join()
         
     def _host(self):
         self._start_thread_network_manager("host")
         
         file_name =  self._find_most_recently_edited_log_file()
         while self._running:
+            file_name = self._check_newest_log_file(file_name)
             self._read_file(file_name)
             self._commentator.update_state()
-            time.sleep(self._readFileIntervalInSeconds)
+            time.sleep(self._read_file_interval_in_seconds)
             
         print("Quitting...")
-        self._networkManager.disconnect()
+        self._network_manager.disconnect()
             
     def _join(self):
         self._start_thread_network_manager("join")
@@ -126,7 +129,7 @@ class Program():
         while most_recently_edited_file_name is None:
             for fileName in os.listdir(self._PATH_LOGS):
                 modification_time = os.path.getmtime(self._PATH_LOGS + fileName)
-                if time.time() < modification_time + (60 * 2): # The file has been modified recently
+                if time.time() < modification_time + (self._log_file_max_age_in_seconds): # The file has been modified recently
                     if modification_time > most_recently_edited_file_time: # The modification timestamp is newer than the previous one
                         most_recently_edited_file_time = modification_time
                         most_recently_edited_file_name = fileName
@@ -134,10 +137,28 @@ class Program():
                     print("Found file {}, but it is too old. Searching more...".format(fileName))
             
             # File not found, pause and try again
-            time.sleep(2)
+            if most_recently_edited_file_name is None:
+                time.sleep(2)
             
         print("Found suitable file {}".format(most_recently_edited_file_name))
         return most_recently_edited_file_name
+
+    # Returns the most recently edited log file if over x seconds have passed since the last
+    # call of this method. If x seconds have not passed, returns file_name
+    def _check_newest_log_file(self, file_name):
+        if (time.time() < self._check_newest_log_file_timestamp_in_seconds
+            + self._check_newest_log_file_interval_in_seconds):
+            return file_name
+
+        print("Checking the newest log file...")
+        self._check_newest_log_file_timestamp_in_seconds = time.time()
+        file_name_newest =  self._find_most_recently_edited_log_file()
+
+        if not file_name_newest == file_name:
+            print("Switching the newest log file from" + " " + file_name + " " + "to" + " " + file_name_newest)
+            self._read_lines = 0
+
+        return file_name_newest
 
     # Opens the file and processes it. Remembers how many lines have been processed and only affects the new lines
     def _read_file(self, file_name):
@@ -149,9 +170,9 @@ class Program():
             unread_lines = []
             i = 1
             for line in file:
-                if i > self._readLines: # This line has not been read yet
+                if i > self._read_lines: # This line has not been read yet
                     unread_lines.append(line)
-                    self._readLines += 1
+                    self._read_lines += 1
                 i += 1
             file.close()
         except BaseException as e:
