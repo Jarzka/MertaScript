@@ -52,13 +52,13 @@ class Commentator():
     PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 5
     
     def __init__(self, program, round_time):
-        self._lastTimeStartedSayingInSeconds = 0
-        self._lastFileDurationInSeconds = 0
-        self._roundStartTime = 0 # Unix Timestamp
-        self._team1Side = "" # ct or t
-        self._team2Side = ""
-        self._team1Points = 0
-        self._team2Points = 0
+        self._started_saying_something_timestamp_in_seconds = 0
+        self._last_file_duration_in_seconds = 0
+        self._round_start_timestamp = 0
+        self._team1_side = "" # ct or t
+        self._team2_side = ""
+        self._team1_points = 0
+        self._team2_points = 0
         self._round_time_in_seconds = round_time
         self._program = program
     
@@ -283,7 +283,7 @@ class Commentator():
         return file
     
     def _is_currently_saying_something(self):
-        if time.time() > self._lastTimeStartedSayingInSeconds + self._lastFileDurationInSeconds:
+        if time.time() > self._started_saying_something_timestamp_in_seconds + self._last_file_duration_in_seconds:
             return False
         
         return True
@@ -463,8 +463,8 @@ class Commentator():
     def play_file(self, path, file):
         file_path = path + file
         if not self._is_currently_saying_something():
-            self._lastFileDurationInSeconds = self._get_file_duration(file_path)
-            self._lastTimeStartedSayingInSeconds = time.time()
+            self._last_file_duration_in_seconds = self._get_file_duration(file_path)
+            self._started_saying_something_timestamp_in_seconds = time.time()
             winsound.PlaySound(file_path, winsound.SND_ASYNC)
             
     def _get_file_duration(self, file_path):
@@ -476,41 +476,41 @@ class Commentator():
         
     def get_client_team_points(self):
         if self._program.get_client_team() == 1:
-            return self._team1Points
+            return self._team1_points
         
-        return self._team2Points
+        return self._team2_points
     
     def get_enemy_team_points(self):
         if self._program.get_client_team() == 1:
-            return self._team2Points
+            return self._team2_points
         
-        return self._team1Points
+        return self._team1_points
     
     def _get_client_team_side(self):
         if self._program.get_client_team() == 1:
-            return self._team1Side
+            return self._team1_side
         
-        return self._team2Side
+        return self._team2_side
         
     # @return Time left in seconds
     def _get_round_time_left(self):
-        if self._roundStartTime is not 0:
+        if self._round_start_timestamp is not 0:
             return int(self._round_time_in_seconds -  self._get_match_time_passed())
         return -1
         
     # @return Match time passed in seconds
     def _get_match_time_passed(self):
-        if self._roundStartTime is not 0:
-            return int(time.time() - self._roundStartTime)
+        if self._round_start_timestamp is not 0:
+            return int(time.time() - self._round_start_timestamp)
         return -1
     
     def set_round_start_time(self, time_in_seconds):
-        self._roundStartTime = time_in_seconds
+        self._round_start_timestamp = time_in_seconds
     
     def reset_points(self):
         print("Reseting team points")
-        self._team1Points = 0
-        self._team2Points = 0
+        self._team1_points = 0
+        self._team2_points = 0
         
     def update_state(self):
         self._check_time()
@@ -532,16 +532,16 @@ class Commentator():
     # @param teamId int 1 or 2
     def get_points(self, team_id):
         if team_id == 1:
-            return self._team1Points
+            return self._team1_points
         elif team_id == 2:
-            return self._team2Points
+            return self._team2_points
 
     # @param side string ct or t
     def set_team_points(self, side, points):
         # If old points are greater than the new value, then we know that a new match as started
-        if self._team1Side == side and points < self._team1Points:
+        if self._team1_side == side and points < self._team1_points:
             self.reset_points()
-        elif self._team2Side == side and points < self._team2Points:
+        elif self._team2_side == side and points < self._team2_points:
             self.reset_points()
         
         # Remember old values before changing them
@@ -549,12 +549,12 @@ class Commentator():
         enemy_team_points_old = self.get_enemy_team_points()
         
         # Give the points to the team that plays on that side
-        if self._team1Side == side:
+        if self._team1_side == side:
             print("Team 1 scored {}".format(points))
-            self._team1Points = points
-        elif self._team2Side == side:
+            self._team1_points = points
+        elif self._team2_side == side:
             print("Team 2 scored {}".format(points))
-            self._team2Points = points
+            self._team2_points = points
             
         # Did client team got a new point?
         if self.get_client_team_points() > client_team_points_old:
@@ -582,16 +582,16 @@ class Commentator():
     # @return string ct or t
     def get_team_side(self, team_number):
         if team_number == 1:
-            return self._team1Side
+            return self._team1_side
         if team_number == 2:
-            return self._team2Side
+            return self._team2_side
 
     # @param side string ct or t
     def set_team_side(self, team_number, side):
         if team_number == 1:
-            self._team1Side = side
+            self._team1_side = side
         if team_number == 2:
-            self._team2Side = side
+            self._team2_side = side
             
         if self._program.get_client_team() == team_number:
             print("The client plays now on {} side".format(side))
