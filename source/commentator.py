@@ -69,187 +69,170 @@ class Commentator():
     def _initialize_dictionaries(self):
         # The player or a teammate kills somebody with headshot
         self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM = (
-        "taivas_varjele.wav",
-        "ai mika laukaus.wav",
-        "ja jälleen.wav",
-        "aivan mieletön paukku.wav",
-        "ja siellä lepää.wav",
-        "ilmiömäinen harhautus.wav",
-        "ja siellä lepää niin että tärinä kuuluu.wav",
-        "aivan mieletön paukku.wav", # REMEMBER TO INSERT COMMA HERE!
+            "taivas_varjele.wav",
+            "ai mika laukaus.wav",
+            "ja jälleen.wav",
+            "aivan mieletön paukku.wav",
+            "ja siellä lepää.wav",
+            "ilmiömäinen harhautus.wav",
+            "ja siellä lepää niin että tärinä kuuluu.wav",
+            "aivan mieletön paukku.wav", # REMEMBER TO INSERT COMMA HERE!
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM)
             
         # Enemy killed the player or a teammate with headshot
         self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM = (
-        "paha virhe.wav",
-        "ja sinne yläkulmaan menee laukaus.wav",
-        "se tuli kuin salama kirkkaalta taivaalta.wav",
-        "aivan karmaiseva pommi.wav",
-        "hirmuinen tälli.wav",
-        "olipa tyly.wav",
-        "siitä miinus pöytäkirjaan.wav",
+            "paha virhe.wav",
+            "ja sinne yläkulmaan menee laukaus.wav",
+            "se tuli kuin salama kirkkaalta taivaalta.wav",
+            "aivan karmaiseva pommi.wav",
+            "hirmuinen tälli.wav",
+            "olipa tyly.wav",
+            "siitä miinus pöytäkirjaan.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM)
         
         # Kill with knife
         self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM = (
-        "nostakaa kädes ylös.wav",
+            "nostakaa kädes ylös.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM)
         
         self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM = (
-        "ei voi olla totta.wav",
+            "ei voi olla totta.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM)
         
         # Teamkiller
         self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM = (
-        "herrajestas mitä siellä tapahtui.wav",
-        "herranen aika.wav",
+            "herrajestas mitä siellä tapahtui.wav",
+            "herranen aika.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM)
 
         self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM = (
-        "herrajestas mitä siellä tapahtui.wav",
-        "herranen aika.wav",
+            "herrajestas mitä siellä tapahtui.wav",
+            "herranen aika.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM)
         
         # The enemy has defused the bomb
         self._SOUND_DICTIONARY_SCORE_DEFUSE_BOMB_ENEMY_TEAM = (
-        "Eihän siitä mitään maalia tule.wav",
+            "Eihän siitä mitään maalia tule.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_DEFUSE_BOMB_ENEMY_TEAM)
         
         # The enemy team got a score
         self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM = (
-        "ei voi oi oi oi.wav",
-        "hermo pitää säilyä.wav",
-        "oijoijoi virhe.wav",
-        "on tämä hirveää.wav",
-        "herra paratkoon mikä maali sieltä tulee.wav",
-        "aivan hirveää.wav",
-        "ja loistava maali ja varmaan näitte millainen hinta siitä jälleen maksettiin.wav",
+            "ei voi oi oi oi.wav",
+            "hermo pitää säilyä.wav",
+            "oijoijoi virhe.wav",
+            "on tämä hirveää.wav",
+            "herra paratkoon mikä maali sieltä tulee.wav",
+            "aivan hirveää.wav",
+            "ja loistava maali ja varmaan näitte millainen hinta siitä jälleen maksettiin.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
         
         # Player's team got a score
         self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM = (
-        "aivan loistava maali.wav",
-        "pitkä huuto.wav",
-        "ja nyyyt on komea maali.wav",
-        "aeeee ja sinne menee.wav",
-        "se on siinä.wav",
-        "sieltä tulee maali.wav",
-        "ja sieltä se tulee.wav",
-        "laulu raikaa.wav",
-        "niin se vain kruunautuu.wav",
-        "näittekö minkä maalin kaveri iskee.wav",
-        "ja siellä ooon oiii mikä maalii.wav",
-        "oiiii joijojijiji.wav",
-        "oiiii mikä maali.wav",
-        "oijoijoi.wav",
-        "oijoijoi2.wav",
-        "oijoijoijoi.wav",
-        "sinne menee.wav",
-        "mikään ei tule enää eteen.wav",
-        "hirveetä pökkyä pesään.wav",
+            "aivan loistava maali.wav",
+            "pitkä huuto.wav",
+            "ja nyyyt on komea maali.wav",
+            "aeeee ja sinne menee.wav",
+            "se on siinä.wav",
+            "sieltä tulee maali.wav",
+            "ja sieltä se tulee.wav",
+            "laulu raikaa.wav",
+            "niin se vain kruunautuu.wav",
+            "näittekö minkä maalin kaveri iskee.wav",
+            "ja siellä ooon oiii mikä maalii.wav",
+            "oiiii joijojijiji.wav",
+            "oiiii mikä maali.wav",
+            "oijoijoi.wav",
+            "oijoijoi2.wav",
+            "oijoijoijoi.wav",
+            "sinne menee.wav",
+            "mikään ei tule enää eteen.wav",
+            "hirveetä pökkyä pesään.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
         
         # Player's team has 3 points and the enemy team has 1
         self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_3_1 = (
-        "3-1.wav",
+            "3-1.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_3_1)
         
         # Player's team has 4 points and the enemy team has 0
         self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_4_0 = (
-        "4-0.wav",
+            "4-0.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_4_0)
         
         # Player's team has 5 points and the enemy team has 1
         self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_5_1 = (
-        "5-1.wav",
-        "5-1 2.wav",
+            "5-1.wav",
+            "5-1 2.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_5_1)
             
         # Player's team has 6 points and the enemy team has 1
         self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1 = (
-        "6-1.wav",
+            "6-1.wav",
         )
+        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1)
         
         # Player's team has 6 points and the enemy team has 1
         self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_2_3 = (
-        "2-3.wav",
+            "2-3.wav",
         )
-        
-        
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1)
+        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_2_3)
 
         # 10 seconds left    
         self._SOUND_DICTIONARY_TIME_0_10 = (
-        "10 sekuntia.wav",
-        "aikaa on vielä.wav",
-        "on aikaa vielä.wav",
-        "painikaa vääntäkää.wav",
+            "10 sekuntia.wav",
+            "aikaa on vielä.wav",
+            "on aikaa vielä.wav",
+            "painikaa vääntäkää.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_TIME_0_10)
             
         # 30 seconds left    
         self._SOUND_DICTIONARY_TIME_0_30 = (
-        "vajaa puoli minuuttia.wav",
+            "vajaa puoli minuuttia.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_TIME_0_30)
                 
         # 20 seconds left    
         self._SOUND_DICTIONARY_TIME_0_20 = (
-        "20 sekuntia.wav",
+            "20 sekuntia.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_TIME_0_20)
         
-        # When round star's and player's team is winning
+        # When round starts and player's team is winning
         self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING = (
-        "loppu on enää pelkkää kosmetiikkaa.wav",
+            "loppu on enää pelkkää kosmetiikkaa.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING)
         
         # When round star's and player's team is losing
         self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING = (
-        "no niin sitten on alettava rakentamaan uusia paikkoja.wav",
-        "nyt ei saa herpaantua.wav",
-        "rauhassa nyt vain oma peli kuntoon.wav",
-        "saadaan vaan lisää liikettä niin hyvä tulee.wav",
-        "ja nyt taklauksia enemmän.wav",
-        "nyt sitten peli käyntiin.wav",
-        "tehkää nyt pojat se maali.wav",
+            "no niin sitten on alettava rakentamaan uusia paikkoja.wav",
+            "nyt ei saa herpaantua.wav",
+            "rauhassa nyt vain oma peli kuntoon.wav",
+            "saadaan vaan lisää liikettä niin hyvä tulee.wav",
+            "ja nyt taklauksia enemmän.wav",
+            "nyt sitten peli käyntiin.wav",
+            "tehkää nyt pojat se maali.wav",
         )
-        
         self._check_dictionary_files(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING)
         
         # When player's team plants a bomb
         self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM = (
-        "hirmuista painetta.wav",
+            "hirmuista painetta.wav",
         )
+        self._check_dictionary_files(self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM)
         
     def set_round_time(self, time_in_seconds):
         self._round_time_in_seconds = time_in_seconds
