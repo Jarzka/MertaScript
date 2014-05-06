@@ -387,7 +387,11 @@ class LogReader():
             print("Catch: {}".format(line))
             self._commentator.set_round_start_time(int(time.time()))
 
-            if self._commentator.get_client_team_points() > self._commentator.get_enemy_team_points():
+            if self._commentator.get_client_team_points() > self._commentator.get_enemy_team_points() + 5:
+                    self._commentator.handle_event(self._commentator.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY)
+            elif self._commentator.get_client_team_points() + 5 < self._commentator.get_enemy_team_points():
+                    self._commentator.handle_event(self._commentator.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY)
+            elif self._commentator.get_client_team_points() > self._commentator.get_enemy_team_points():
                     self._commentator.handle_event(self._commentator.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING)
             elif self._commentator.get_client_team_points() < self._commentator.get_enemy_team_points():
                     self._commentator.handle_event(self._commentator.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING)
