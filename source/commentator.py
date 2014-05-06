@@ -8,6 +8,7 @@ import wave
 import contextlib
 import time
 import random
+import os
 
 class Commentator():
     # These constants are used to tell the commentator which type of sound file it's supposed to say
@@ -31,7 +32,9 @@ class Commentator():
     SOUND_ID_TIME_0_30 = 14 # ...
     SOUND_ID_TIME_0_20 = 15 # ...
     SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING = 16 # Round started and the client team has more points
+    SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 16344
     SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING = 17 # Round started and the enemy team has more points
+    SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY = 1754
     SOUND_ID_BOMB_PLANTED_CLIENT_TEAM = 18 # Client's team planted the bomb
     
     # These values present how likely it is that the commentator will say the asked event id
@@ -48,7 +51,9 @@ class Commentator():
     PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
     PROBABILITY_TIME = 50 # 30
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 10
+    PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 50
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING = 20
+    PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY = 50
     PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 5
     
     def __init__(self, program, round_time):
@@ -64,176 +69,72 @@ class Commentator():
     
         self._initialize_dictionaries()
         
-        self._check_dictionary_files(self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM)
+        self._check_dictionary_files(self._sound_dictionary_bomb_planted_client_team)
         
     def _initialize_dictionaries(self):
-        # The player or a teammate kills somebody with headshot
-        self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM = (
-            "taivas_varjele.wav",
-            "ai mika laukaus.wav",
-            "ja jälleen.wav",
-            "aivan mieletön paukku.wav",
-            "ja siellä lepää.wav",
-            "ilmiömäinen harhautus.wav",
-            "ja siellä lepää niin että tärinä kuuluu.wav",
-            "aivan mieletön paukku.wav", # REMEMBER TO INSERT COMMA HERE!
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM)
-            
-        # Enemy killed the player or a teammate with headshot
-        self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM = (
-            "paha virhe.wav",
-            "ja sinne yläkulmaan menee laukaus.wav",
-            "se tuli kuin salama kirkkaalta taivaalta.wav",
-            "aivan karmaiseva pommi.wav",
-            "hirmuinen tälli.wav",
-            "olipa tyly.wav",
-            "siitä miinus pöytäkirjaan.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM)
-        
-        # Kill with knife
-        self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM = (
-            "nostakaa kädes ylös.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM)
-        
-        self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM = (
-            "ei voi olla totta.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM)
-        
-        # Teamkiller
-        self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM = (
-            "herrajestas mitä siellä tapahtui.wav",
-            "herranen aika.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM)
+        self._sound_dictionary_kill_headshot_client_team = self._load_sound_files("kill-headshot-client")
+        self._sound_dictionary_kill_headshot_enemy_team = self._load_sound_files("kill-headshot-enemy")
 
-        self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM = (
-            "herrajestas mitä siellä tapahtui.wav",
-            "herranen aika.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM)
-        
-        # The enemy has defused the bomb
-        self._SOUND_DICTIONARY_SCORE_DEFUSE_BOMB_ENEMY_TEAM = (
-            "Eihän siitä mitään maalia tule.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_DEFUSE_BOMB_ENEMY_TEAM)
-        
-        # The enemy team got a score
-        self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM = (
-            "ei voi oi oi oi.wav",
-            "hermo pitää säilyä.wav",
-            "oijoijoi virhe.wav",
-            "on tämä hirveää.wav",
-            "herra paratkoon mikä maali sieltä tulee.wav",
-            "aivan hirveää.wav",
-            "ja loistava maali ja varmaan näitte millainen hinta siitä jälleen maksettiin.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
-        
-        # Player's team got a score
-        self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM = (
-            "aivan loistava maali.wav",
-            "pitkä huuto.wav",
-            "ja nyyyt on komea maali.wav",
-            "aeeee ja sinne menee.wav",
-            "se on siinä.wav",
-            "sieltä tulee maali.wav",
-            "ja sieltä se tulee.wav",
-            "laulu raikaa.wav",
-            "niin se vain kruunautuu.wav",
-            "näittekö minkä maalin kaveri iskee.wav",
-            "ja siellä ooon oiii mikä maalii.wav",
-            "oiiii joijojijiji.wav",
-            "oiiii mikä maali.wav",
-            "oijoijoi.wav",
-            "oijoijoi2.wav",
-            "oijoijoijoi.wav",
-            "sinne menee.wav",
-            "mikään ei tule enää eteen.wav",
-            "hirveetä pökkyä pesään.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
-        
-        # Player's team has 3 points and the enemy team has 1
-        self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_3_1 = (
-            "3-1.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_3_1)
-        
-        # Player's team has 4 points and the enemy team has 0
-        self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_4_0 = (
-            "4-0.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_4_0)
-        
-        # Player's team has 5 points and the enemy team has 1
-        self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_5_1 = (
-            "5-1.wav",
-            "5-1 2.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_5_1)
-            
-        # Player's team has 6 points and the enemy team has 1
-        self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1 = (
-            "6-1.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1)
-        
-        # Player's team has 6 points and the enemy team has 1
-        self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_2_3 = (
-            "2-3.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_2_3)
+        self._sound_dictionary_kill_knife_client_team = self._load_sound_files("kill-knife-client")
+        self._sound_dictionary_kill_knife_enemy_team = self._load_sound_files("kill-knife-enemy")
+        self._sound_dictionary_kill_hegrenade_client_team = self._load_sound_files("kill-hegrenade-client")
+        self._sound_dictionary_kill_hegrenade_enemy_team = self._load_sound_files("kill-hegrenade-enemy")
+        self._sound_dictionary_kill_inferno_client_team = self._load_sound_files("kill-inferno-client")
+        self._sound_dictionary_kill_inferno_enemy_team = self._load_sound_files("kill-inferno-enemy")
 
-        # 10 seconds left    
-        self._SOUND_DICTIONARY_TIME_0_10 = (
-            "10 sekuntia.wav",
-            "aikaa on vielä.wav",
-            "on aikaa vielä.wav",
-            "painikaa vääntäkää.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_TIME_0_10)
-            
-        # 30 seconds left    
-        self._SOUND_DICTIONARY_TIME_0_30 = (
-            "vajaa puoli minuuttia.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_TIME_0_30)
-                
-        # 20 seconds left    
-        self._SOUND_DICTIONARY_TIME_0_20 = (
-            "20 sekuntia.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_TIME_0_20)
-        
-        # When round starts and player's team is winning
-        self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING = (
-            "loppu on enää pelkkää kosmetiikkaa.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING)
-        
-        # When round star's and player's team is losing
-        self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING = (
-            "no niin sitten on alettava rakentamaan uusia paikkoja.wav",
-            "nyt ei saa herpaantua.wav",
-            "rauhassa nyt vain oma peli kuntoon.wav",
-            "saadaan vaan lisää liikettä niin hyvä tulee.wav",
-            "ja nyt taklauksia enemmän.wav",
-            "nyt sitten peli käyntiin.wav",
-            "tehkää nyt pojat se maali.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING)
-        
-        # When player's team plants a bomb
-        self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM = (
-            "hirmuista painetta.wav",
-        )
-        self._check_dictionary_files(self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM)
-        
+        self._sound_dictionary_teamkiller_client_team = self._load_sound_files("teamkiller-client")
+        self._sound_dictionary_teamkiller_enemy_team = self._load_sound_files("teamkiller-enemy")
+
+        self._sound_dictionary_score_client_team = self._load_sound_files("score-client")
+        self._sound_dictionary_score_client_team_1_0 = self._load_sound_files("score-client-1-0")
+        self._sound_dictionary_score_client_team_1_1 = self._load_sound_files("score-client-1-1")
+        self._sound_dictionary_score_client_team_2_0 = self._load_sound_files("score-client-2-0")
+        self._sound_dictionary_score_client_team_2_1 = self._load_sound_files("score-client-2-1")
+        self._sound_dictionary_score_client_team_2_2 = self._load_sound_files("score-client-2-2")
+        self._sound_dictionary_score_client_team_2_3 = self._load_sound_files("score-client-2-3")
+        self._sound_dictionary_score_client_team_3_0 = self._load_sound_files("score-client-3-0")
+        self._sound_dictionary_score_client_team_3_1 = self._load_sound_files("score-client-3-1")
+        self._sound_dictionary_score_client_team_3_2 = self._load_sound_files("score-client-3-2")
+        self._sound_dictionary_score_client_team_4_0 = self._load_sound_files("score-client-4-0")
+        self._sound_dictionary_score_client_team_5_1 = self._load_sound_files("score-client-5-1")
+        self._sound_dictionary_score_client_team_6_1 = self._load_sound_files("score-client-6-1")
+        self._sound_dictionary_score_even_client_team = self._load_sound_files("score-even-client")
+        self._sound_dictionary_score_enemy_team = self._load_sound_files("score-enemy")
+        self._sound_dictionary_score_win_client_team = self._load_sound_files("score-win-client")
+        self._sound_dictionary_score_win_enemy_team = self._load_sound_files("score-win-enemy")
+
+        self._sound_dictionary_suicide = self._load_sound_files("suicide")
+
+        self._sound_dictionary_time_0_03 = self._load_sound_files("time-0-03")
+        self._sound_dictionary_time_0_10 = self._load_sound_files("time-0-10")
+        self._sound_dictionary_time_0_15 = self._load_sound_files("time-0-15")
+        self._sound_dictionary_time_0_20 = self._load_sound_files("time-0-20")
+        self._sound_dictionary_time_0_30 = self._load_sound_files("time-0-30")
+        self._sound_dictionary_time_0_40 = self._load_sound_files("time-0-40")
+        self._sound_dictionary_time_1_00 = self._load_sound_files("time-1-00")
+
+        self._sound_dictionary_round_start_client_team_winning = self._load_sound_files("round-start-client-winning")
+        self._sound_dictionary_round_start_enemy_team_winning = self._load_sound_files("round-start-enemy-winning")
+        self._sound_dictionary_round_start_client_team_winning_massively =\
+            self._load_sound_files("round-start-client-winning-massively")
+        self._sound_dictionary_round_start_enemy_team_winning_massively =\
+            self._load_sound_files("round-start-enemy-winning-massively")
+
+        self._sound_dictionary_bomb_planted_client_team = self._load_sound_files("bomb-planted-client")
+
+    def _load_sound_files(self, path):
+        sound_files_array = []
+        search_path = self._program.get_path_sounds() + path + os.path.sep
+
+        try:
+            for file in os.listdir(search_path):
+                if file.endswith(".wav"):
+                    sound_files_array.append(path + os.path.sep + file)
+        except FileNotFoundError as e:
+            print("Warning: " + search_path + " " + "is empty.")
+
+        return sound_files_array
+
     def set_round_time(self, time_in_seconds):
         self._round_time_in_seconds = time_in_seconds
         
@@ -297,28 +198,28 @@ class Commentator():
         # *************** Kills **************
         if (event_id == self.SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM
         and self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_CLIENT_TEAM)):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_enemy_team)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
         elif (event_id == self.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM
         and self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_ENEMY_TEAM)):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_ENEMY_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_HEADSHOT_CLIENT_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_enemy_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_client_team)
             self._handle_event_audio_files(file_client, file_enemy)
 
         elif (event_id == self.SOUND_ID_KILL_KNIFE_CLIENT_TEAM
         and self._get_bool_from_percent(self.PROBABILITY_KILL_KNIFE_CLIENT_TEAM)):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_knife_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_knife_enemy_team)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
         elif (event_id == self.SOUND_ID_KILL_KNIFE_ENEMY_TEAM
         and self._get_bool_from_percent(self.PROBABILITY_KILL_KNIFE_ENEMY_TEAM)):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_ENEMY_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_KILL_KNIFE_CLIENT_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_knife_enemy_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_knife_client_team)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
@@ -326,25 +227,25 @@ class Commentator():
                 
         elif event_id == self.SOUND_ID_TIME_0_20 \
         and self._get_bool_from_percent(self.PROBABILITY_TIME):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_20)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_20)
             self._handle_event_audio_files(file_client, file_client)
             return True
                 
         elif event_id == self.SOUND_ID_TIME_0_10 \
         and self._get_bool_from_percent(self.PROBABILITY_TIME):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_10)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_10)
             self._handle_event_audio_files(file_client, file_client)
             return True
                 
         elif event_id == self.SOUND_ID_TIME_0_30 \
         and self._get_bool_from_percent(self.PROBABILITY_TIME):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_30)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_30)
             self._handle_event_audio_files(file_client, file_client)
             return True
                 
         elif event_id == self.SOUND_ID_TIME_0_30 \
         and self._get_bool_from_percent(self.PROBABILITY_TIME):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TIME_0_30)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_30)
             self._handle_event_audio_files(file_client, file_client)
             return True
                 
@@ -352,15 +253,15 @@ class Commentator():
                 
         elif event_id == self.SOUND_ID_TEAMKILLER_CLIENT_TEAM \
         and self._get_bool_from_percent(self.PROBABILITY_TEAMKILLER_CLIENT_TEAM):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_teamkiller_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_teamkiller_enemy_team)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
         elif event_id == self.SOUND_ID_TEAMKILLER_ENEMY_TEAM \
         and self._get_bool_from_percent(self.PROBABILITY_TEAMKILLER_ENEMY_TEAM):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_ENEMY_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_TEAMKILLER_CLIENT_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_teamkiller_enemy_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_teamkiller_client_team)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
@@ -368,45 +269,45 @@ class Commentator():
         
         elif event_id == self.SOUND_ID_SCORE_CLIENT_TEAM \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
         elif event_id == self.SOUND_ID_SCORE_ENEMY_TEAM \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_ENEMY_TEAM)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
         
         elif event_id == self.SOUND_ID_SCORE_CLIENT_TEAM_2_3 \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_2_3)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_2_3)
             self._handle_event_audio_files(file_client)
             return True
                 
         elif event_id == self.SOUND_ID_SCORE_CLIENT_TEAM_3_1 \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_3_1)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_3_1)
             self._handle_event_audio_files(file_client)
             return True
                 
         elif event_id == self.SOUND_ID_SCORE_CLIENT_TEAM_4_0 \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_4_0)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_4_0)
             self._handle_event_audio_files(file_client)
             return True
                 
         elif event_id == self.SOUND_ID_SCORE_CLIENT_TEAM_5_1 \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_5_1)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_5_1)
             self._handle_event_audio_files(file_client)
             return True
                 
         elif event_id == self.SOUND_ID_SCORE_CLIENT_TEAM_6_1 \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_SCORE_CLIENT_TEAM_6_1)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_6_1)
             self._handle_event_audio_files(file_client)
             return True
         
@@ -414,15 +315,15 @@ class Commentator():
         
         elif event_id == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING \
         and self._get_bool_from_percent(self.PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_round_start_client_team_winning)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_round_start_enemy_team_winning)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
         elif event_id == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING \
         and self._get_bool_from_percent(self.PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_ENEMY_TEAM_WINNING)
-            file_enemy = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_ROUND_START_CLIENT_TEAM_WINNING)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_round_start_enemy_team_winning)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_round_start_client_team_winning)
             self._handle_event_audio_files(file_client, file_enemy)
             return True
                 
@@ -430,7 +331,7 @@ class Commentator():
         
         elif event_id == self.SOUND_ID_BOMB_PLANTED_CLIENT_TEAM \
         and self._get_bool_from_percent(self.PROBABILITY_BOMB_PLANTED_CLIENT_TEAM):
-            file_client = self._select_dictionary_sound_randomly(self._SOUND_DICTIONARY_BOMB_PLANTED_CLIENT_TEAM)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_bomb_planted_client_team)
             self._handle_event_audio_files(file_client)
             return True
             
