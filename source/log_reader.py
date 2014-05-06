@@ -411,7 +411,7 @@ class LogReader():
         reg_ex = "Team.+"
         reg_ex += "\"TERRORIST\".+"
         reg_ex += "scored.+?"
-        reg_ex += "\d"
+        reg_ex += "\d+"
         match = re.search(reg_ex, line)
 
         if match:
@@ -428,7 +428,7 @@ class LogReader():
         reg_ex = "Team.+"
         reg_ex += "\"CT\".+"
         reg_ex += "scored.+?"
-        reg_ex += "\d"
+        reg_ex += "\d+"
         match = re.search(reg_ex, line)
 
         if match:
