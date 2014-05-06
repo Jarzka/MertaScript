@@ -52,6 +52,10 @@ class Commentator():
     PROBABILITY_KILL_HEADSHOT_ENEMY_TEAM = 100
     PROBABILITY_KILL_KNIFE_CLIENT_TEAM = 100 
     PROBABILITY_KILL_KNIFE_ENEMY_TEAM = 100
+    PROBABILITY_KILL_HEGRENADE_CLIENT_TEAM = 100
+    PROBABILITY_KILL_HEGRENADE_ENEMY_TEAM = 100
+    PROBABILITY_KILL_INFERNO_CLIENT_TEAM = 100
+    PROBABILITY_KILL_INFERNO_ENEMY_TEAM = 100
     PROBABILITY_TEAMKILLER_CLIENT_TEAM = 100
     PROBABILITY_TEAMKILLER_ENEMY_TEAM = 100
     PROBABILITY_SCORE_ENEMY_TEAM = 100
@@ -82,10 +86,9 @@ class Commentator():
         self._TEAM_1_PLAYER_NAMES = self._program.get_team_1_player_names_from_config_file()
         if self._CLIENT_TEAM is not 1 and self._CLIENT_TEAM is not 2:
             raise RuntimeError("config.txt client_team should be 1 or 2.")
-    
-        self._initialize_dictionaries()
-        
-    def _initialize_dictionaries(self):
+
+        # Initialise dictionaries
+
         self._sound_dictionary_kill_headshot_client_team = self._load_sound_files("kill-headshot-client")
         self._sound_dictionary_kill_headshot_enemy_team = self._load_sound_files("kill-headshot-enemy")
 
@@ -221,6 +224,10 @@ class Commentator():
         if self._handle_event_kill_headshot_enemy(event_id): return True
         if self._handle_event_kill_knife_client(event_id): return True
         if self._handle_event_kill_knife_enemy(event_id): return True
+        if self._handle_event_kill_hegrenade_client(event_id): return True
+        if self._handle_event_kill_hegrenade_enemy(event_id): return True
+        if self._handle_event_kill_inferno_client(event_id): return True
+        if self._handle_event_kill_inferno_enemy(event_id): return True
                 
         # *************** Time **************
 
@@ -253,7 +260,6 @@ class Commentator():
         if self._handle_event_bomb_planted_client(event_id): return True
 
         return False
-
 
     def _handle_event_kill_headshot_client(self, event_id):
         if (event_id == self.SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM
@@ -290,6 +296,46 @@ class Commentator():
         and self._get_bool_from_percent(self.PROBABILITY_KILL_KNIFE_ENEMY_TEAM)):
             file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_knife_enemy_team)
             file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_knife_client_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_kill_hegrenade_client(self, event_id):
+        if (event_id == self.SOUND_ID_KILL_HEGRENADE_CLIENT_TEAM
+        and self._get_bool_from_percent(self.PROBABILITY_KILL_HEGRENADE_CLIENT_TEAM)):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_hegrenade_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_hegrenade_enemy_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_kill_hegrenade_enemy(self, event_id):
+        if (event_id == self.SOUND_ID_KILL_HEGRENADE_ENEMY_TEAM
+        and self._get_bool_from_percent(self.PROBABILITY_KILL_HEGRENADE_ENEMY_TEAM)):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_hegrenade_enemy_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_hegrenade_client_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_kill_inferno_client(self, event_id):
+        if (event_id == self.SOUND_ID_KILL_INFERNO_CLIENT_TEAM
+        and self._get_bool_from_percent(self.PROBABILITY_KILL_INFERNO_CLIENT_TEAM)):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_inferno_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_inferno_enemy_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_kill_inferno_enemy(self, event_id):
+        if (event_id == self.SOUND_ID_KILL_INFERNO_ENEMY_TEAM
+        and self._get_bool_from_percent(self.PROBABILITY_KILL_INFERNO_ENEMY_TEAM)):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_inferno_enemy_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_inferno_client_team)
             self._handle_event_with_audio_files(file_client, file_enemy)
             return True
 
