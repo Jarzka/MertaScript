@@ -235,6 +235,14 @@ class Program():
             return True
         if self._scan_line_for_team2_kills_enemy_knife(line):
             return True
+        if self._scan_line_for_team1_kills_enemy_hegrenade(line):
+            return True
+        if self._scan_line_for_team2_kills_enemy_hegrenade(line):
+            return True
+        if self._scan_line_for_team1_kills_enemy_inferno(line):
+            return True
+        if self._scan_line_for_team2_kills_enemy_inferno(line):
+            return True
         if self._scan_line_for_round_start(line):
             return True
         if self._scan_line_for_round_end(line):
@@ -308,7 +316,8 @@ class Program():
         return False
                     
     def _scan_line_for_team2_kills_enemy_headshot(self, line):
-        # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
+        # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
+        # However, it is very likely that the killer was team 2 player.
         
         reg_ex = ".+ killed .+"
         reg_ex += self._construct_regex_team1()
@@ -343,7 +352,8 @@ class Program():
         return False
                 
     def _scan_line_for_team2_kills_enemy_knife(self, line):
-        # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
+        # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
+        # However, it is very likely that the killer was team 2 player.
         
         reg_ex = ".+ killed .+"
         reg_ex += self._construct_regex_team1()
@@ -360,7 +370,81 @@ class Program():
                     self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_KNIFE_CLIENT_TEAM)
                 return True
         return False
-                
+
+    def _scan_line_for_team1_kills_enemy_hegrenade(self, line):
+        reg_ex = self._construct_regex_team1()
+        reg_ex += ".+ killed .+"
+        reg_ex += "with.+"
+        reg_ex += "hegrenade"
+        match = re.search(reg_ex, line)
+
+        if match:
+            if not self._is_team_1_player_the_victim(match.group(0)):
+                print("Catch: {}".format(line))
+                if self._CLIENT_TEAM == 1:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEGRENADE_CLIENT_TEAM)
+                elif self._CLIENT_TEAM == 2:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEGRENADE_ENEMY_TEAM)
+                return True
+        return False
+
+    def _scan_line_for_team2_kills_enemy_hegrenade(self, line):
+        # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
+        # However, it is very likely that the killer was team 2 player.
+
+        reg_ex = ".+ killed .+"
+        reg_ex += self._construct_regex_team1()
+        reg_ex += ".+with.+"
+        reg_ex += "hegrenade"
+        match = re.search(reg_ex, line)
+
+        if match:
+            if not self._is_team_1_player_the_killer(match.group(0)):
+                print("Catch: {}".format(line))
+                if self._CLIENT_TEAM == 1:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEGRENADE_ENEMY_TEAM)
+                elif self._CLIENT_TEAM == 2:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEGRENADE_CLIENT_TEAM)
+                return True
+        return False
+
+    def _scan_line_for_team1_kills_enemy_inferno(self, line):
+        reg_ex = self._construct_regex_team1()
+        reg_ex += ".+ killed .+"
+        reg_ex += "with.+"
+        reg_ex += "inferno"
+        match = re.search(reg_ex, line)
+
+        if match:
+            if not self._is_team_1_player_the_victim(match.group(0)):
+                print("Catch: {}".format(line))
+                if self._CLIENT_TEAM == 1:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_INFERNO_CLIENT_TEAM)
+                elif self._CLIENT_TEAM == 2:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_INFERNO_ENEMY_TEAM)
+                return True
+        return False
+
+    def _scan_line_for_team2_kills_enemy_inferno(self, line):
+        # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
+        # However, it is very likely that the killer was team 2 player.
+
+        reg_ex = ".+ killed .+"
+        reg_ex += self._construct_regex_team1()
+        reg_ex += ".+with.+"
+        reg_ex += "inferno"
+        match = re.search(reg_ex, line)
+
+        if match:
+            if not self._is_team_1_player_the_killer(match.group(0)):
+                print("Catch: {}".format(line))
+                if self._CLIENT_TEAM == 1:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_INFERNO_ENEMY_TEAM)
+                elif self._CLIENT_TEAM == 2:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_INFERNO_CLIENT_TEAM)
+                return True
+        return False
+
     def _scan_line_for_round_start(self, line):
         reg_ex = "World triggered.*"
         reg_ex += "Round_Start" # does not include buytime

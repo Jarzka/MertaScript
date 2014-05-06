@@ -18,6 +18,10 @@ class Commentator():
     SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM = 4  # Enemy team killed an client with headshot
     SOUND_ID_KILL_KNIFE_CLIENT_TEAM = 24 # Client team killed an enemy with knife
     SOUND_ID_KILL_KNIFE_ENEMY_TEAM = 25 # Enemy team killed an client with knife
+    SOUND_ID_KILL_HEGRENADE_CLIENT_TEAM = 2224 # Client team killed an enemy with hegrenade
+    SOUND_ID_KILL_HEGRENADE_ENEMY_TEAM = 26775 # Enemy team killed an client with hegrenade
+    SOUND_ID_KILL_INFERNO_CLIENT_TEAM = 2545 # Client team killed an enemy with inferno
+    SOUND_ID_KILL_INFERNO_ENEMY_TEAM = 455 # Enemy team killed an client with inferno
     SOUND_ID_TEAMKILLER_CLIENT_TEAM = 5  # There is a teamkiller in client's team
     SOUND_ID_TEAMKILLER_ENEMY_TEAM = 22
     SOUND_ID_SCORE_ENEMY_TEAM = 6 # Enemy team got a point
