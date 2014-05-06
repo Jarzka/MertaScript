@@ -80,7 +80,7 @@ class NetworkManager():
             # Send team info to the server
             
             time.sleep(1)
-            message = "TEAM|" + str(self._program.get_client_team())
+            message = "TEAM|" + str(self._program.get_commentator().get_client_team())
             self._socket.sendall(message.encode())
             
             # Listen server messages
