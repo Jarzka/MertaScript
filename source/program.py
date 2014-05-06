@@ -599,6 +599,7 @@ class Program():
         if match:
             print("Catch: {}".format(line))
             self._commentator.reset_points()
+            self._commentator.reset_round_time();
             return True
         return False
             

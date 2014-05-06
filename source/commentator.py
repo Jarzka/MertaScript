@@ -404,6 +404,10 @@ class Commentator():
         print("Reseting team points")
         self._team1_points = 0
         self._team2_points = 0
+
+    def reset_round_time(self):
+        print("Reseting round time")
+        self._round_start_timestamp_in_seconds = 0
         
     def update_state(self):
         self._check_time()
