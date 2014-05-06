@@ -64,7 +64,10 @@ class Commentator():
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY = 50
     PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 5
     
-    def __init__(self, program, round_time, max_rounds):
+    def __init__(self, program, log_reader):
+        self._program = program
+        self._log_reader = log_reader
+
         self._started_saying_something_timestamp_in_seconds = 0
         self._last_file_duration_in_seconds = 0
         self._round_start_timestamp_in_seconds = 0
@@ -72,13 +75,15 @@ class Commentator():
         self._team2_side = ""
         self._team1_points = 0
         self._team2_points = 0
-        self._round_time_in_seconds = round_time
-        self._max_rounds = max_rounds
-        self._program = program
+        self._round_time_in_seconds = int(self._program.get_value_from_config_file("host_round_time"))
+        self._max_rounds = int(self._program.get_value_from_config_file("host_max_rounds"))
+
+        self._CLIENT_TEAM = int(self._program.get_value_from_config_file("client_team"))
+        self._TEAM_1_PLAYER_NAMES = self._program.get_team_1_player_names_from_config_file()
+        if self._CLIENT_TEAM is not 1 and self._CLIENT_TEAM is not 2:
+            raise RuntimeError("config.txt client_team should be 1 or 2.")
     
         self._initialize_dictionaries()
-        
-        self._check_dictionary_files(self._sound_dictionary_bomb_planted_client_team)
         
     def _initialize_dictionaries(self):
         self._sound_dictionary_kill_headshot_client_team = self._load_sound_files("kill-headshot-client")
@@ -131,9 +136,21 @@ class Commentator():
 
         self._sound_dictionary_bomb_planted_client_team = self._load_sound_files("bomb-planted-client")
 
+    def get_team_1_player_names(self):
+        return self._TEAM_1_PLAYER_NAMES
+
+    def get_client_team(self):
+        return self._CLIENT_TEAM
+
+    def get_enemy_team(self):
+        if self._CLIENT_TEAM == 1:
+            return 2
+        elif self._CLIENT_TEAM == 2:
+            return 1
+
     def _load_sound_files(self, path):
         sound_files_array = []
-        search_path = self._program.get_path_sounds() + path + os.path.sep
+        search_path = self._log_reader.get_path_sounds() + path + os.path.sep
 
         try:
             for file in os.listdir(search_path):
@@ -149,16 +166,6 @@ class Commentator():
 
     def set_max_rounds(self, rounds):
         self._max_rounds = rounds
-        
-    def _check_dictionary_files(self, dictionary):
-        i = 0
-        while i < len(dictionary):
-            file =  dictionary[i]
-            try:
-                open(self._program.get_path_sounds() + file)
-            except:
-                print("Warning: file \"{}\" not found from {}".format(file, self._program.get_path_sounds()))
-            i += 1 
 
     # The method randomly chooses a sound file from the given dictionary and returns it.
     # @param dictionary. key = SOUND_ID, value = file.wav
@@ -198,10 +205,10 @@ class Commentator():
     def _send_play_sound_command_to_clients(self, file_client_team = None, file_enemy_team = None):
         if file_client_team is not None:
             self._program.get_network_manager().send_message_to_clients("PLAY_SOUND|" + file_client_team,
-                                                                        self._program.get_client_team())
+                                                                        self.get_client_team())
         if file_enemy_team is not None:
             self._program.get_network_manager().send_message_to_clients("PLAY_SOUND|" + file_enemy_team,
-                                                                             self._program.get_enemy_team())
+                                                                             self.get_enemy_team())
     
     # Play an audio file related to the given eventId. Will also send the play audio command to clients
     def handle_event(self, event_id):
@@ -352,10 +359,10 @@ class Commentator():
     # @param audioFileClient string The file to be played locally and to be send to clients who play in the same team than host
     # @param audioFileEnemy string The file to be sent to client who play in different team than the host
     def _handle_event_with_audio_files(self, audio_file_client, audio_file_enemy=None):
-            self.play_file(self._program.get_path_sounds() + audio_file_client) # Play audio file locally
+            self.play_file(self._log_reader.get_path_sounds() + audio_file_client) # Play audio file locally
             if self._program.get_network_manager().is_host():
-                self._send_play_sound_command_to_clients(self._program.get_path_sounds() + audio_file_client,
-                                                         self._program.get_path_sounds() + audio_file_enemy)
+                self._send_play_sound_command_to_clients(self._log_reader.get_path_sounds() + audio_file_client,
+                                                         self._log_reader.get_path_sounds() + audio_file_enemy)
         
     def play_file(self, path):
         if not self._is_currently_saying_something():

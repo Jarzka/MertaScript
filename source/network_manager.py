@@ -10,6 +10,7 @@ import client
 import socket
 import time
 import re
+import client_thread
 from threading import Thread
 
 class NetworkManager():
@@ -48,9 +49,9 @@ class NetworkManager():
                 c = client.Client(self._nextFreeId, client_socket) # Create a new client object
                 self._nextFreeId += 1
                 self._clients.append(c)
-                client_thread = ClientThread() # Create a new thread that receives messages from the client
-                client_thread.init(c, self)
-                client_thread.start()
+                connected_client_thread = client_thread.ClientThread() # Create a new thread that receives messages from the client
+                connected_client_thread.init(c, self)
+                connected_client_thread.start()
             except socket.error as e:
                 print("Error listening client connections: {}".format(e))
                 break
@@ -136,27 +137,3 @@ class NetworkManager():
             if client.get_team() == team:
                 print("Sending {} to client {}".format(message, client.get_id()))
                 client.get_socket().sendall(message.encode())
-
-class ClientThread(Thread):
-    def init(self, client, network_manager):
-        self._client = client
-        self._network_manager = network_manager
-        
-    def run(self):
-        # In python 3, bytes strings and unicode strings are now two different types. Since sockets are not
-        # aware of string encodings, they are using raw bytes strings, that have a slightly different interface from
-        # unicode strings. So, now, whenever you have a unicode string that you need to use as a byte string,
-        # you need to encode() it. And when you have a byte string, you need to decode it to use it as a regular
-        # (python 2.x) string. Unicode strings are quotes enclosed strings. Bytes strings are b"" enclosed strings
-        self._client.get_socket().sendall("CON_MSG|Welcome to the server.".encode())
-
-        while True:
-            try:
-                data = self._client.get_socket().recv(self._network_manager.get_buffer_size()).decode()
-                # print("Got message from client id {}: {}".format(self._client.get_id(), data))
-                self._network_manager._decode_message(data, self._client)
-            except:
-                print("Client {} disconnected".format(self._client.get_id()))
-                break
-
-        self._client.disconnect() # Set client status disconnected
