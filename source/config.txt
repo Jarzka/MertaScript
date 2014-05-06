@@ -1,9 +1,10 @@
 start = host
 client_team = 1
-sounds_folder = mertaranta
 
+host_sounds_folder = mertaranta
 host_team_1_player_names = Ismo, Seppo
 host_round_time = 180
+host_max_rounds = 15
 host_logs_path = C:\SteamCMD\steamapps\common\Counter-Strike Global Offensive Beta - Dedicated Server\csgo\logs
 host_port = 52828
 
