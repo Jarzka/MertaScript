@@ -243,6 +243,8 @@ class Program():
             return True
         if self._scan_line_for_team2_kills_enemy_inferno(line):
             return True
+        if self._scan_line_suicide(line):
+            return True
         if self._scan_line_for_round_start(line):
             return True
         if self._scan_line_for_round_end(line):
@@ -443,6 +445,16 @@ class Program():
                 elif self._CLIENT_TEAM == 2:
                     self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_INFERNO_CLIENT_TEAM)
                 return True
+        return False
+
+    def _scan_line_for_round_start(self, line):
+        reg_ex = ".+committed suicide.+"
+        match = re.search(reg_ex, line)
+
+        if match:
+            print("Catch: {}".format(line))
+            self._commentator.handle_event(commentator.Commentator.SOUND_ID_SUICIDE)
+            return True
         return False
 
     def _scan_line_for_round_start(self, line):

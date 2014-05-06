@@ -24,6 +24,7 @@ class Commentator():
     SOUND_ID_KILL_INFERNO_ENEMY_TEAM = 455 # Enemy team killed an client with inferno
     SOUND_ID_TEAMKILLER_CLIENT_TEAM = 5  # There is a teamkiller in client's team
     SOUND_ID_TEAMKILLER_ENEMY_TEAM = 22
+    SOUND_ID_SUICIDE = 13438 # Somebody committed a suicide
     SOUND_ID_SCORE_ENEMY_TEAM = 6 # Enemy team got a point
     SOUND_ID_SCORE_CLIENT_TEAM = 7 # Client team got a point
     SOUND_ID_SCORE_CLIENT_TEAM_3_1 = 8 # Client team got a point and the scores are 3 for client and 1 for enemy
