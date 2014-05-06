@@ -9,7 +9,7 @@ class LogReader():
         self._commentator = None
         self._read_file_interval_in_seconds = 1 # How often the program scans the log file
         self._read_file_timestamp_in_seconds = 0
-        self._check_newest_log_file_interval_in_seconds = 2 * 60
+        self._check_newest_log_file_interval_in_seconds = 60
         self._check_newest_log_file_timestamp_in_seconds = 0
         self._log_file_max_age_in_seconds = 5 * 60
         self._current_log_file = ""
