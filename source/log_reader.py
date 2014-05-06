@@ -186,6 +186,8 @@ class LogReader():
             return True
         if self._scan_line_game_end(line):
             return True
+        if self._scan_line_hostage_taken(line):
+            return True
         return False
 
     def _scan_line_team1_teamkiller(self, line):
@@ -534,5 +536,15 @@ class LogReader():
 
         if match:
             print("Catch: {}".format(line))
+            return True
+        return False
+
+
+    def _scan_line_hostage_taken(self, line):
+        reg_ex = "Touched_A_Hostage"
+        match = re.search(reg_ex, line)
+
+        if match:
+            self._commentator.reset_round_time()
             return True
         return False
