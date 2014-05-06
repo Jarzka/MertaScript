@@ -70,6 +70,7 @@ class Commentator():
     PROBABILITY_WIN_CLIENT = 100
     PROBABILITY_WIN_ENEMY = 100
     PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
+    PROBABILITY_SUICIDE = 100
     PROBABILITY_TIME = 50 # 30
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 10
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 50
@@ -249,6 +250,10 @@ class Commentator():
         if self._handle_event_timeakiller_client(event_id): return True
         if self._handle_event_teamkiller_enemy(event_id): return True
 
+        # *************** Suicide ***************
+
+        if self._handle_event_suicide(event_id): return True
+
         # *************** Scores ***************
         
         if self._handle_event_score_client(event_id): return True
@@ -404,6 +409,16 @@ class Commentator():
         and self._get_bool_from_percent(self.PROBABILITY_TEAMKILLER_ENEMY_TEAM):
             file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_teamkiller_enemy_team)
             file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_teamkiller_client_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_suicide(self, event_id):
+        if event_id == self.SOUND_ID_SUICIDE \
+        and self._get_bool_from_percent(self.PROBABILITY_SUICIDE):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_suicide)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_suicide)
             self._handle_event_with_audio_files(file_client, file_enemy)
             return True
 
