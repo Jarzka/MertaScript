@@ -259,7 +259,7 @@ class Program():
 
     def _scan_line_for_team1_teamkiller(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".+killed.+"
+        reg_ex += ".+ killed .+"
         reg_ex += self._construct_regex_team1()
         match = re.search(reg_ex, line)
         if match:
@@ -276,7 +276,7 @@ class Program():
         # Actually the RegEx thinks that someone, who does not play in team 1, killed someone who does not play in team 1.
         # However, it is very likely that the player was team 2 player and he killed team 2 player.
         
-        reg_ex = ".+killed.+"
+        reg_ex = ".+ killed .+"
         match = re.search(reg_ex, line)
         if match:
             # This is a good match if there is NO team 1 player name BEFORE or AFTER the word killed
@@ -293,7 +293,7 @@ class Program():
                 
     def _scan_line_for_team1_kills_enemy_headshot(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".+killed.+"
+        reg_ex += ".+ killed .+"
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
         
@@ -310,7 +310,7 @@ class Program():
     def _scan_line_for_team2_kills_enemy_headshot(self, line):
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
         
-        reg_ex = ".+killed.+"
+        reg_ex = ".+ killed .+"
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+headshot"
         match = re.search(reg_ex, line)
@@ -327,7 +327,7 @@ class Program():
                 
     def _scan_line_for_team1_kills_enemy_knife(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".+killed.+"
+        reg_ex += ".+ killed .+"
         reg_ex += "with.+"
         reg_ex += "knife"
         match = re.search(reg_ex, line)
@@ -345,7 +345,7 @@ class Program():
     def _scan_line_for_team2_kills_enemy_knife(self, line):
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player. However, it is very likely that the killer was team 2 player.
         
-        reg_ex = ".+killed.+"
+        reg_ex = ".+ killed .+"
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+with.+"
         reg_ex += "knife"
