@@ -14,7 +14,9 @@ class Program():
         self._handle_config_file()
         self._read_lines = 0 # How many lines have been read from the log file
         self._network_manager = network_manager.NetworkManager(self)
-        self._commentator = commentator.Commentator(self, int(self.get_value_from_config_file("host_round_time")))
+        self._commentator = commentator.Commentator(self,
+                                                    int(self.get_value_from_config_file("host_round_time")),
+                                                    int(self.get_value_from_config_file("max_rounds")))
         self._read_file_interval_in_seconds = 1 # How often the program scans the log file
         self._check_newest_log_file_interval_in_seconds = 2 * 60
         self._check_newest_log_file_timestamp_in_seconds = 0
@@ -39,7 +41,7 @@ class Program():
             self._TEAM_1_PLAYER_NAMES = self._get_team_1_player_names_from_config_file()
             self._CLIENT_TEAM = int(self.get_value_from_config_file("client_team"))
             self._PATH_SOUNDS = "sound" + os.path.sep
-            self._PATH_SOUNDS += self.get_value_from_config_file("sounds_folder")
+            self._PATH_SOUNDS += self.get_value_from_config_file("host_sounds_folder")
             self._PATH_SOUNDS += os.path.sep
             
             # Error checking
@@ -243,7 +245,9 @@ class Program():
             return True
         if self._scan_line_for_team1_player_joins_team(line):
             return True
-        if self._scan_line_for_setting_round_time(line):
+        if self._scan_line_for_max_rounds(line):
+            return True
+        if self._scan_line_for_round_time(line):
             return True
         if self._scan_line_for_bomb_plant(line):
             return True
@@ -395,7 +399,7 @@ class Program():
         
         if match:
             print("Catch: {}".format(line))
-            # We need to get the score points. Do this by selecting the first digit from the match
+            # We need to get the score points. Do this by selecting the digits from the match
             match2 = re.search("\d+", match.group(0))
             self._commentator.set_team_points("t", int(match2.group(0)))
             return True
@@ -412,7 +416,7 @@ class Program():
         
         if match:
             print("Catch: {}".format(line))
-            # We need to get the score points. Do this by selecting the first digit from the match
+            # We need to get the score points. Do this by selecting the digits from the match
             match2 = re.search("\d+", match.group(0))
             if match2:
                 self._commentator.set_team_points("ct", int(match2.group(0)))
@@ -448,15 +452,30 @@ class Program():
             self._commentator.set_team_side(2, "t")
             return True
         return False
+
+    def _scan_line_for_max_rounds(self, line):
+        reg_ex = "mp_maxrounds.+?\d"
+        match = re.search(reg_ex, line)
+
+        if match:
+            print("Catch: {}".format(line))
+            # We need to get the value. Do this by selecting the digits from the match
+            match2 = re.search("\d+", match.group(0))
+            if match2:
+                max_rounds = int(match2.group(0))
+                self._commentator.set_max_rounds(max_rounds)
+                print("Max rounds changed to {}".format(max_rounds))
+            return True
+        return False
             
-    def _scan_line_for_setting_round_time(self, line):
+    def _scan_line_for_round_time(self, line):
         reg_ex = "mp_roundtime.+?\d"
         match = re.search(reg_ex, line)
         
         if match:
             print("Catch: {}".format(line))
-            # We need to get the value. Do this by selecting the first digit from the match
-            match2 = re.search("\d", match.group(0))
+            # We need to get the value. Do this by selecting the digits from the match
+            match2 = re.search("\d+", match.group(0))
             if match2:
                 round_time = int(match2.group(0))
                 round_time *= 60

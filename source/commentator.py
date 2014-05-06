@@ -56,7 +56,7 @@ class Commentator():
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY = 50
     PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 5
     
-    def __init__(self, program, round_time):
+    def __init__(self, program, round_time, max_rounds):
         self._started_saying_something_timestamp_in_seconds = 0
         self._last_file_duration_in_seconds = 0
         self._round_start_timestamp_in_seconds = 0
@@ -65,6 +65,7 @@ class Commentator():
         self._team1_points = 0
         self._team2_points = 0
         self._round_time_in_seconds = round_time
+        self._max_rounds = max_rounds
         self._program = program
     
         self._initialize_dictionaries()
@@ -137,6 +138,9 @@ class Commentator():
 
     def set_round_time(self, time_in_seconds):
         self._round_time_in_seconds = time_in_seconds
+
+    def set_max_rounds(self, rounds):
+        self._max_rounds = rounds
         
     def _check_dictionary_files(self, dictionary):
         i = 0
