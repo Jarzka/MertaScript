@@ -33,8 +33,8 @@ class Commentator():
     SOUND_ID_SCORE_CLIENT_TEAM_6_1 = 11 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_2_3 = 23 # ...
     SOUND_ID_SCORE_EVEN = 242422523 # ...
-    SOUND_ID_CLIENT_WIN = 24242256623 # ...
-    SOUND_ID_ENEMY_WIN = 24242233523 # ...
+    SOUND_ID_WIN_CLIENT = 24242256623 # ...
+    SOUND_ID_WIN_ENEMY = 24242233523 # ...
     SOUND_ID_SCORE_DEFUSE_BOMB_ENEMY_TEAM = 19 # Enemy team got a point by defusing the bomb
     SOUND_ID_TIME_0_10 = 13 # 10 seconds left
     SOUND_ID_TIME_0_30 = 14 # ...
@@ -60,6 +60,8 @@ class Commentator():
     PROBABILITY_TEAMKILLER_ENEMY_TEAM = 100
     PROBABILITY_SCORE_ENEMY_TEAM = 100
     PROBABILITY_SCORE_CLIENT_TEAM = 100
+    PROBABILITY_WIN_CLIENT = 100
+    PROBABILITY_WIN_ENEMY = 100
     PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
     PROBABILITY_TIME = 50 # 30
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 10
@@ -244,6 +246,8 @@ class Commentator():
         
         if self._handle_event_score_client(event_id): return True
         if self._handle_event_score_enemy(event_id): return True
+        if self._handle_event_score_client_win(event_id): return True
+        if self._handle_event_score_enemy_win(event_id): return True
         if self._handle_event_score_client_2_3(event_id): return True
         if self._handle_event_score_client_3_1(event_id): return True
         if self._handle_event_score_client_4_0(event_id): return True
@@ -403,6 +407,26 @@ class Commentator():
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM):
             file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team)
             file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_score_client_win(self, event_id):
+        if event_id == self.SOUND_ID_WIN_CLIENT \
+        and self._get_bool_from_percent(self.PROBABILITY_WIN_CLIENT):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_win_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_win_enemy_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_score_enemy_win(self, event_id):
+        if event_id == self.SOUND_ID_WIN_ENEMY \
+        and self._get_bool_from_percent(self.PROBABILITY_WIN_ENEMY):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_win_enemy_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_win_client_team)
             self._handle_event_with_audio_files(file_client, file_enemy)
             return True
 
@@ -598,7 +622,7 @@ class Commentator():
             print("Client team got more points")
             # Did client win the match
             if self.get_client_team_points() > self._max_rounds / 2:
-                self.handle_event(self.SOUND_ID_CLIENT_WIN)
+                self.handle_event(self.SOUND_ID_WIN_CLIENT)
             # Are the points specific?
             if self.get_client_team_points() == 2 and self.get_enemy_team_points() == 3:
                 self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_2_3)
@@ -619,7 +643,7 @@ class Commentator():
         if self.get_enemy_team_points() > enemy_team_points_old:
             # Did enemy win the match
             if self.get_enemy_team_points() > self._max_rounds / 2:
-                self.handle_event(self.SOUND_ID_ENEMY_WIN)
+                self.handle_event(self.SOUND_ID_WIN_ENEMY)
             print("Enemy team got more points")
             self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM)
 
