@@ -43,9 +43,13 @@ class Commentator():
     SOUND_ID_WIN_CLIENT = 24242256623 # ...
     SOUND_ID_WIN_ENEMY = 24242233523 # ...
     SOUND_ID_SCORE_DEFUSE_BOMB_ENEMY_TEAM = 19 # Enemy team got a point by defusing the bomb
-    SOUND_ID_TIME_0_10 = 13 # 10 seconds left
-    SOUND_ID_TIME_0_30 = 14 # ...
+    SOUND_ID_TIME_0_03 = 3322 # 3 seconds left
+    SOUND_ID_TIME_0_10 = 13 # ...
+    SOUND_ID_TIME_0_15 = 2213 # ...
     SOUND_ID_TIME_0_20 = 15 # ...
+    SOUND_ID_TIME_0_30 = 14 # ...
+    SOUND_ID_TIME_0_40 = 15454 # ...
+    SOUND_ID_TIME_1_00 = 153342 # ...
     SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING = 16 # Round started and the client team has more points
     SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 16344
     SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING = 17 # Round started and the enemy team has more points
@@ -71,7 +75,7 @@ class Commentator():
     PROBABILITY_WIN_ENEMY = 100
     PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
     PROBABILITY_SUICIDE = 100
-    PROBABILITY_TIME = 50 # 30
+    PROBABILITY_TIME = 30
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 10
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 50
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING = 20
@@ -83,8 +87,10 @@ class Commentator():
         self._log_reader = log_reader
 
         self._started_saying_something_timestamp_in_seconds = 0
-        self._last_file_duration_in_seconds = 0
+        self._last_audio_file_duration_in_seconds = 0
         self._round_start_timestamp_in_seconds = 0
+        self._check_time_interval_in_seconds = 1
+        self._check_time_timestamp_in_seconds = 0
         self._team1_side = "" # ct or t
         self._team2_side = ""
         self._team1_points = 0
@@ -176,6 +182,7 @@ class Commentator():
 
     def set_round_time(self, time_in_seconds):
         self._round_time_in_seconds = time_in_seconds
+        self._round_start_timestamp_in_seconds = 0
 
     def set_max_rounds(self, rounds):
         self._max_rounds = rounds
@@ -186,29 +193,29 @@ class Commentator():
         if len(dictionary) == 0:
                 file = dictionary[0]
                 return file
+
+        random.shuffle(dictionary)
+        pseudo_random_number = random.randrange(0, len(dictionary))
         
-        pseudo_random_number = random.randint(0, len(dictionary) - 1)
-        
-        # Make sure the number we got is not bigger than len(dictionary)
-        while pseudo_random_number > len(dictionary) - 1:
-                pseudo_random_number /= 2
-                pseudo_random_number /= 3
+        # Make sure the number we got is not bigger than len(dictionary) or less than 0
+        while pseudo_random_number > len(dictionary) - 1 or pseudo_random_number < 0:
+                pseudo_random_number = random.randrange(0, len(dictionary))
         
         file = dictionary[pseudo_random_number]
         print("Choosing sound from the dictionary: {}".format(file))
         return file
     
     def _is_currently_saying_something(self):
-        if time.time() > self._started_saying_something_timestamp_in_seconds + self._last_file_duration_in_seconds:
+        if time.time() > self._started_saying_something_timestamp_in_seconds + self._last_audio_file_duration_in_seconds:
             return False
         
         return True
     
     # @param percent int a number between 0 - 100. The higher it is the more likely it is that his function returns True
     def _get_bool_from_percent(self, percent):
-        value2 = random.randrange(0, 100)
+        value = random.randrange(0, 101)
         # print(value2)
-        if percent >= value2:
+        if percent >= value:
             return True
         return False
     
@@ -241,9 +248,13 @@ class Commentator():
                 
         # *************** Time **************
 
+        if self._handle_event_time_0_03(event_id): return True
         if self._handle_event_time_0_10(event_id): return True
+        if self._handle_event_time_0_15(event_id): return True
         if self._handle_event_time_0_20(event_id): return True
         if self._handle_event_time_0_30(event_id): return True
+        if self._handle_event_time_0_40(event_id): return True
+        if self._handle_event_time_1_00(event_id): return True
 
         # *************** Teamkiller **************
                 
@@ -367,10 +378,10 @@ class Commentator():
 
         return False
 
-    def _handle_event_time_0_20(self, event_id):
-        if event_id == self.SOUND_ID_TIME_0_20 \
+    def _handle_event_time_0_03(self, event_id):
+        if event_id == self.SOUND_ID_TIME_0_03 \
         and self._get_bool_from_percent(self.PROBABILITY_TIME):
-            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_20)
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_03)
             self._handle_event_with_audio_files(file_client, file_client)
             return True
 
@@ -385,10 +396,46 @@ class Commentator():
 
         return False
 
+    def _handle_event_time_0_15(self, event_id):
+        if event_id == self.SOUND_ID_TIME_0_15 \
+        and self._get_bool_from_percent(self.PROBABILITY_TIME):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_15)
+            self._handle_event_with_audio_files(file_client, file_client)
+            return True
+
+        return False
+
+    def _handle_event_time_0_20(self, event_id):
+        if event_id == self.SOUND_ID_TIME_0_20 \
+        and self._get_bool_from_percent(self.PROBABILITY_TIME):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_20)
+            self._handle_event_with_audio_files(file_client, file_client)
+            return True
+
+        return False
+
     def _handle_event_time_0_30(self, event_id):
         if event_id == self.SOUND_ID_TIME_0_30 \
         and self._get_bool_from_percent(self.PROBABILITY_TIME):
             file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_30)
+            self._handle_event_with_audio_files(file_client, file_client)
+            return True
+
+        return False
+
+    def _handle_event_time_0_40(self, event_id):
+        if event_id == self.SOUND_ID_TIME_0_40 \
+        and self._get_bool_from_percent(self.PROBABILITY_TIME):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_40)
+            self._handle_event_with_audio_files(file_client, file_client)
+            return True
+
+        return False
+
+    def _handle_event_time_1_00(self, event_id):
+        if event_id == self.SOUND_ID_TIME_1_00 \
+        and self._get_bool_from_percent(self.PROBABILITY_TIME):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_1_00)
             self._handle_event_with_audio_files(file_client, file_client)
             return True
 
@@ -657,7 +704,7 @@ class Commentator():
         
     def play_file(self, path):
         if not self._is_currently_saying_something():
-            self._last_file_duration_in_seconds = self._get_file_duration(path)
+            self._last_audio_file_duration_in_seconds = self._get_file_duration(path)
             self._started_saying_something_timestamp_in_seconds = time.time()
             winsound.PlaySound(path, winsound.SND_ASYNC)
             
@@ -711,21 +758,35 @@ class Commentator():
         self._round_start_timestamp_in_seconds = 0
         
     def update_state(self):
+        if (time.time() < self._check_time_timestamp_in_seconds + self._check_time_interval_in_seconds):
+            return False
+
         self._check_time()
+
+        return True
         
     # Checks how much time is left and if it is possible to comment it
     def _check_time(self):
+        self._check_time_timestamp_in_seconds = time.time()
         round_time_left = self._get_round_time_left()
         
         if round_time_left > 0:
             print("Round time left: {}".format(round_time_left))
-            
-        if round_time_left == 30:
-            self.handle_event(self.SOUND_ID_TIME_0_30)
-        elif round_time_left == 20:
-            self.handle_event(self.SOUND_ID_TIME_0_20)
+
+        if round_time_left == 3:
+            self.handle_event(self.SOUND_ID_TIME_0_03)
         elif round_time_left == 10:
             self.handle_event(self.SOUND_ID_TIME_0_10)
+        elif round_time_left == 15:
+            self.handle_event(self.SOUND_ID_TIME_0_15)
+        elif round_time_left == 20:
+            self.handle_event(self.SOUND_ID_TIME_0_20)
+        elif round_time_left == 30:
+            self.handle_event(self.SOUND_ID_TIME_0_30)
+        elif round_time_left == 40:
+            self.handle_event(self.SOUND_ID_TIME_0_40)
+        elif round_time_left == 60:
+            self.handle_event(self.SOUND_ID_TIME_1_00)
         
     # @param teamId int 1 or 2
     def get_points(self, team_id):
