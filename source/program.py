@@ -38,16 +38,16 @@ class Program():
             self._PATH_LOGS = self.get_value_from_config_file("host_logs_path")
             self._TEAM_1_PLAYER_NAMES = self._get_team_1_player_names_from_config_file()
             self._CLIENT_TEAM = int(self.get_value_from_config_file("client_team"))
-            self._PATH_SOUNDS = "sound\\"
+            self._PATH_SOUNDS = "sound" + os.path.sep
             self._PATH_SOUNDS += self.get_value_from_config_file("sounds_folder")
-            self._PATH_SOUNDS += "\\"
+            self._PATH_SOUNDS += os.path.sep
             
             # Error checking
 
             if not self._START_METHOD == "host" and not self._START_METHOD == "join":
                 raise RuntimeError("config.txt start type should be host or join, but it was" + " " + self._START_METHOD)
-            if self._PATH_LOGS[len(self._PATH_LOGS) - 1] is not "\\": # Make sure that the path log ends with a backslash
-                self._PATH_LOGS += "\\"
+            if self._PATH_LOGS[len(self._PATH_LOGS) - 1] is not os.path.sep: # Make sure that the path log ends with a backslash
+                self._PATH_LOGS += os.path.sep
             if self._CLIENT_TEAM is not 1 and self._CLIENT_TEAM is not 2:
                 raise RuntimeError("config.txt client_team should be 1 or 2.")
         except BaseException as e:
@@ -127,15 +127,18 @@ class Program():
         most_recently_edited_file_time = 0
         
         while most_recently_edited_file_name is None:
-            for fileName in os.listdir(self._PATH_LOGS):
-                modification_time = os.path.getmtime(self._PATH_LOGS + fileName)
-                if time.time() < modification_time + (self._log_file_max_age_in_seconds): # The file has been modified recently
-                    if modification_time > most_recently_edited_file_time: # The modification timestamp is newer than the previous one
-                        most_recently_edited_file_time = modification_time
-                        most_recently_edited_file_name = fileName
-                else:
-                    print("Found file {}, but it is too old. Searching more...".format(fileName))
-            
+            try:
+                for fileName in os.listdir(self._PATH_LOGS):
+                    modification_time = os.path.getmtime(self._PATH_LOGS + fileName)
+                    if time.time() < modification_time + (self._log_file_max_age_in_seconds): # The file has been modified recently
+                        if modification_time > most_recently_edited_file_time: # The modification timestamp is newer than the previous one
+                            most_recently_edited_file_time = modification_time
+                            most_recently_edited_file_name = fileName
+                    else:
+                        print("Found file {}, but it is too old. Searching more...".format(fileName))
+            except FileNotFoundError as e:
+                print("Warning: log folder is empty.")
+
             # File not found, pause and try again
             if most_recently_edited_file_name is None:
                 time.sleep(2)
@@ -490,7 +493,6 @@ class Program():
         
         if match:
             print("Catch: {}".format(line))
-            self._running = False
             return True
         return False
         
