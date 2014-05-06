@@ -5,3 +5,4 @@ source/.project
 source/.pydevproject
 
 *.pyc
+*.wav
