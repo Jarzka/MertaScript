@@ -360,9 +360,13 @@ class Commentator():
     # @param audioFileEnemy string The file to be sent to client who play in different team than the host
     def _handle_event_with_audio_files(self, audio_file_client, audio_file_enemy=None):
             self.play_file(self._log_reader.get_path_sounds() + audio_file_client) # Play audio file locally
+
             if self._program.get_network_manager().is_host():
-                self._send_play_sound_command_to_clients(self._log_reader.get_path_sounds() + audio_file_client,
+                if audio_file_enemy is not None:
+                    self._send_play_sound_command_to_clients(self._log_reader.get_path_sounds() + audio_file_client,
                                                          self._log_reader.get_path_sounds() + audio_file_enemy)
+                else:
+                    self._send_play_sound_command_to_clients(self._log_reader.get_path_sounds() + audio_file_client, None)
         
     def play_file(self, path):
         if not self._is_currently_saying_something():
@@ -378,19 +382,19 @@ class Commentator():
             return duration
         
     def get_client_team_points(self):
-        if self._program.get_client_team() == 1:
+        if self.get_client_team() == 1:
             return self._team1_points
         
         return self._team2_points
     
     def get_enemy_team_points(self):
-        if self._program.get_client_team() == 1:
+        if self.get_client_team() == 1:
             return self._team2_points
         
         return self._team1_points
     
     def _get_client_team_side(self):
-        if self._program.get_client_team() == 1:
+        if self.get_client_team() == 1:
             return self._team1_side
         
         return self._team2_side
@@ -508,5 +512,5 @@ class Commentator():
         if team_number == 2:
             self._team2_side = side
             
-        if self._program.get_client_team() == team_number:
+        if self.get_client_team() == team_number:
             print("The client plays now on {} side".format(side))
