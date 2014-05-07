@@ -479,7 +479,7 @@ class LogReader():
         return False
 
     def _scan_line_max_rounds(self, line):
-        reg_ex = "mp_maxrounds.+?\d"
+        reg_ex = "mp_maxrounds.+?\d+"
         match = re.search(reg_ex, line)
 
         if match:
@@ -494,7 +494,7 @@ class LogReader():
         return False
 
     def _scan_line_round_time(self, line):
-        reg_ex = "mp_roundtime.+?\d"
+        reg_ex = "mp_roundtime.+?\d+"
         match = re.search(reg_ex, line)
 
         if match:
