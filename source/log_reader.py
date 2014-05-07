@@ -425,6 +425,7 @@ class LogReader():
             # We need to get the score points. Do this by selecting the digits from the match
             match2 = re.search("\d+", match.group(0))
             self._commentator.set_team_points("t", int(match2.group(0)))
+            self._commentator.reset_round_time()
             return True
         return False
 
@@ -443,6 +444,7 @@ class LogReader():
             match2 = re.search("\d+", match.group(0))
             if match2:
                 self._commentator.set_team_points("ct", int(match2.group(0)))
+                self._commentator.reset_round_time()
                 return True
         return False
 
