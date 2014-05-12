@@ -20,6 +20,7 @@ class Program():
 
         self._network_manager = network_manager.NetworkManager(self)
         self._log_reader = log_reader.LogReader(self)
+        self._network_manager.set_log_reader(self._log_reader)
         self._commentator = commentator.Commentator(self, self._log_reader)
         self._log_reader.set_commentator(self._commentator)
 

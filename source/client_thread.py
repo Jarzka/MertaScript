@@ -17,7 +17,7 @@ class ClientThread(Thread):
             try:
                 data = self._client.get_socket().recv(self._network_manager.get_buffer_size()).decode()
                 # print("Got message from client id {}: {}".format(self._client.get_id(), data))
-                self._network_manager._decode_message(data, self._client)
+                self._network_manager.decode_message(data, self._client)
             except:
                 print("Client {} disconnected".format(self._client.get_id()))
                 break

@@ -2,16 +2,22 @@
 # http://www.binarytides.com/python-socket-programming-tutorial/
 
 # PROTOCOL:
+#
+# From server to client:
 # CON_MSG|Message = A message to displayed on the console
 # PLAY_SOUND|fileName = Play a sound file
+# CHECK_FILE|location|SIZE = Asks if the client has a file in location and it's the given size.
+#
+# From client to server
 # TEAM|number = The player says that he is playing on the team number (1 or 2)
+# FILE_CHECKED|location|OK or FILE_CHECKED|location|MISSING
 
 import client
 import socket
 import time
 import re
 import client_thread
-from threading import Thread
+import os
 
 class NetworkManager():
     def __init__(self, program):
@@ -20,8 +26,12 @@ class NetworkManager():
         self._BUFFER_SIZE = 65535
         self._socket = None
         self._program = program
+        self._log_reader = None
         self._isHost = False
         self._running = True # Main loop condition
+
+    def set_log_reader(self, log_reader):
+        self._log_reader = log_reader
         
     def get_buffer_size(self):
         return self._BUFFER_SIZE
@@ -54,15 +64,36 @@ class NetworkManager():
                 c = client.Client(self._nextFreeId, client_socket) # Create a new client object
                 self._nextFreeId += 1
                 self._clients.append(c)
-                connected_client_thread = client_thread.ClientThread() # Create a new thread that receives messages from the client
+
+                 # Create a new thread that receives messages from the client
+                connected_client_thread = client_thread.ClientThread()
                 connected_client_thread.init(c, self)
                 connected_client_thread.start()
+
+                self._send_validate_files(c)
             except socket.error as e:
                 print("Error listening client connections: {}".format(e))
                 break
         
         print("Server shutting down...")
         self._socket.close()
+
+    def _send_validate_files(self, client):
+        search_path = self._log_reader.get_path_sounds()
+
+        # TODO ENTÄ JOS KANSIO ON TYHMÄ
+        try:
+            for directory in os.listdir(search_path):
+                for file in os.listdir(search_path + directory):
+                    if file.endswith(".wav"):
+                        message = "CHECK_FILE|"
+                        message += "|"
+                        message += search_path + directory + os.path.sep + file
+                        message += "|"
+                        message += str(os.path.getsize(search_path + directory + os.path.sep + file))
+                        client.get_socket().sendall(message.encode())
+        except FileNotFoundError as e:
+            print("Warning: " + e.strerror + ": " + e.filename)
         
     def disconnect(self):
         self._socket.close()
@@ -93,7 +124,7 @@ class NetworkManager():
                 try:
                     data = self._socket.recv(self._BUFFER_SIZE).decode()
                     # print("Got message from the server: {}".format(data))
-                    self._decode_message(data)
+                    self.decode_message(data)
                 except socket.error as e:
                     print("Error: {}".format(e))
                     break
@@ -107,7 +138,7 @@ class NetworkManager():
         return self._isHost
 
     # @param sender client object who sent the message
-    def _decode_message(self, message, sender=None):
+    def decode_message(self, message, sender=None):
         if re.search("^CON_MSG\|.+", message):
             array_message = message.split("|")
             print(array_message[1])
@@ -120,6 +151,10 @@ class NetworkManager():
             if sender is not None:
                 print ("Client {} is playing on team {}".format(sender.get_id(), array_message[1]))
                 sender.set_team(int(array_message[1]))
+        elif re.search("^CHECK_FILE|.+", message):
+            print("Received: " + message)
+        elif re.search("^FILE_CHECKED|.+", message):
+            print("Received: " + message)
             
     def _remove_disconnected_clients(self):
         i = 0
