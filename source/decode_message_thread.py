@@ -1,7 +1,6 @@
 from threading import Thread
 
 class DecodeMessageThread(Thread):
-    # @param method string "host" or "join"
     def init(self, data, sender, network_manager):
         self._data = data
         self._sender = sender

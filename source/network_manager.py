@@ -11,11 +11,9 @@
 # <CON_MSG|Message> = A message to displayed on the console
 # <PLAY_SOUND|fileName> = Play a sound file
 # <CHECK_FILE|location|SIZE> = Asks if the client has a file in location and it's the given size.
-# <FILE|BYTES> = Send file
 #
 # From client to server
 # <TEAM|number> = The player says that he is playing on the team number (1 or 2)
-# <FILE_CHECKED|location|OK> or <FILE_CHECKED|location|MISSING>
 
 import client
 import socket
@@ -24,14 +22,13 @@ import re
 import client_thread
 import os
 import decode_message_thread
-import send_file_thread
 
 
 class NetworkManager():
     def __init__(self, program):
         self._nextFreeId = 0 # When a new client is connected, assign this value to the client id. Then increment his value.
         self._clients = [] # Array of client objects
-        self._BUFFER_SIZE = 5242880
+        self._BUFFER_SIZE = 65535
         self._socket = None
         self._program = program
         self._log_reader = None
@@ -89,8 +86,7 @@ class NetworkManager():
     def _send_validate_files(self, client):
         search_path = self._log_reader.get_path_sounds()
 
-        # TODO ENTÄ JOS KANSIO ON TYHMÄ
-        try:
+        try: # TODO Check if the folder is empty
             for directory in os.listdir(search_path):
                 for file in os.listdir(search_path + directory):
                     if file.endswith(".wav"):
@@ -133,7 +129,7 @@ class NetworkManager():
             server = client.Client(123, self._socket)
             while self._running:
                 try:
-                    data = self._socket.recv(self._BUFFER_SIZE).decode()
+                    data = self._socket.recv(self._BUFFER_SIZE)
                     # print("Got message from the server: {}".format(data))
                     decode_message = decode_message_thread.DecodeMessageThread()
                     decode_message.init(data, server, self)
@@ -156,21 +152,16 @@ class NetworkManager():
             message_decoded = message.decode()
             self._handle_message_utf8(message_decoded, sender)
         except UnicodeDecodeError as e:
-            # This is binary data.
-             message_test = message[6:] # Remove <FILE| from the beginning.
-             print("asd")
-             new_file = open("test.wav", 'wb+')
-             new_file.write(message_test)
-             new_file.close()
+            pass
 
     def _handle_message_utf8(self, message, sender):
+        # Split messages and handle them seperately
         for splitted_message in self._split_network_message(message):
             self._handle_message_type_CON_MSG(splitted_message)
             self._handle_message_type_PLAY_SOUND(splitted_message)
             self._handle_message_type_TEAM(splitted_message, sender)
             self._handle_message_type_CHECK_FILE(splitted_message, sender)
-            self._handle_message_type_FILE_CHECKED(splitted_message, sender)
-            self._handle_message_type_FILE(splitted_message, sender)
+
     def _split_network_message(self, message):
         messages = message.split(">")
 
@@ -207,42 +198,12 @@ class NetworkManager():
                 array_message = message.split("|")
                 filename = array_message[1]
                 if os.path.isfile(filename):
-                    # TODO CHECK SIZE
-                    send_message = "<FILE_CHECKED|"
-                    send_message += array_message[1]
-                    send_message += "|OK>"
-                    sender.get_socket().sendall(send_message.encode())
+                    pass # TODO CHECK SIZE
                 else:
                     print("Missing sound file. Preparing to download it from the server...")
-                    send_message = "<FILE_CHECKED|"
-                    send_message += array_message[1]
-                    send_message += "|MISSING>"
-                    sender.get_socket().sendall(send_message.encode())
+                    # TODO Request file using HTTP
             except FileNotFoundError as e:
                 print("Warning: " + e.strerror + ": " + e.filename)
-
-    def _handle_message_type_FILE_CHECKED(self, message, sender):
-        if message[:14] == "<FILE_CHECKED|":
-            array_message = message.split("|")
-
-            if array_message[2][:-1] != "OK":
-                print("Client does not have the file" + " " + array_message[1] + ". " + "Preparing to send it...")
-                #send_file = send_file_thread.SendFileThread(array_message[1], sender)
-                #send_file.start()
-
-                file = open(array_message[1], "rb")
-                read_bytes = file.read()
-                file.close()
-                try:
-                    sender.get_socket().sendall("<FILE|".encode() + read_bytes + ">".encode())
-                    print("File sent.")
-                except socket.error as e:
-                    print("Error sending file: {}". format(e))
-
-
-    def _handle_message_type_FILE(self, message, sender):
-        if message[:6] == "<FILE|":
-            print("Received" + message)
             
     def _remove_disconnected_clients(self):
         i = 0

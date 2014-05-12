@@ -17,7 +17,7 @@ class ClientThread(Thread):
 
         while True:
             try:
-                data = self._client.get_socket().recv(self._network_manager.get_buffer_size()).decode()
+                data = self._client.get_socket().recv(self._network_manager.get_buffer_size())
                 # print("Got message from client id {}: {}".format(self._client.get_id(), data))
                 decode_message = decode_message_thread.DecodeMessageThread()
                 decode_message.init(data, self._client, self._network_manager)
