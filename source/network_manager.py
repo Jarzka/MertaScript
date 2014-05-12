@@ -34,14 +34,19 @@ class NetworkManager():
             self._socket.bind(("", port))
             print("Server started.")
             print("Listening at {}".format(self._socket.getsockname()))
-            self._socket.listen(5) # The backlog argument specifies the maximum number of queued connections and should be at least 0; the maximum value is system-dependent (usually 5), the minimum value is forced to 0
+            self._socket.listen(5) # The backlog argument specifies the maximum number of queued connections
+            # and should be at least 0; the maximum value is system-dependent (usually 5),
+            # the minimum value is forced to 0
         except socket.error as e:
             print("Could not start server: {}". format(e))
             return False
         
         while self._running:
             try:
-                client_socket, address = self._socket.accept() # Accept a connection. The return value is a pair (conn, address) where conn is a new socket object usable to send and receive data on the connection, and address is the address bound to the socket on the other end of the connection.
+                client_socket, address = self._socket.accept() # Accept a connection.
+                # The return value is a pair (conn, address) where conn is a new socket object usable to send and
+                # receive data on the connection, and address is the address bound to the socket on the other
+                # end of the connection.
                 
                 print ("Got connection from {}".format(address))
                 
