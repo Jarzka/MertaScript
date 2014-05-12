@@ -31,7 +31,7 @@ class NetworkManager():
     def __init__(self, program):
         self._nextFreeId = 0 # When a new client is connected, assign this value to the client id. Then increment his value.
         self._clients = [] # Array of client objects
-        self._BUFFER_SIZE = 65535
+        self._BUFFER_SIZE = 5242880
         self._socket = None
         self._program = program
         self._log_reader = None
@@ -152,6 +152,18 @@ class NetworkManager():
 
     # @param sender client object who sent the message
     def decode_message(self, message, sender=None):
+        try:
+            message_decoded = message.decode()
+            self._handle_message_utf8(message_decoded, sender)
+        except UnicodeDecodeError as e:
+            # This is binary data.
+             message_test = message[6:] # Remove <FILE| from the beginning.
+             print("asd")
+             new_file = open("test.wav", 'wb+')
+             new_file.write(message_test)
+             new_file.close()
+
+    def _handle_message_utf8(self, message, sender):
         for splitted_message in self._split_network_message(message):
             self._handle_message_type_CON_MSG(splitted_message)
             self._handle_message_type_PLAY_SOUND(splitted_message)
@@ -218,7 +230,7 @@ class NetworkManager():
                 #send_file = send_file_thread.SendFileThread(array_message[1], sender)
                 #send_file.start()
 
-                file = open (array_message[1], "rb")
+                file = open(array_message[1], "rb")
                 read_bytes = file.read()
                 file.close()
                 try:

@@ -1,4 +1,6 @@
 from threading import Thread
+import decode_message_thread
+
 
 class ClientThread(Thread):
     def init(self, client, network_manager):
@@ -17,7 +19,9 @@ class ClientThread(Thread):
             try:
                 data = self._client.get_socket().recv(self._network_manager.get_buffer_size()).decode()
                 # print("Got message from client id {}: {}".format(self._client.get_id(), data))
-                self._network_manager.decode_message(data, self._client) # Todo start own thread
+                decode_message = decode_message_thread.DecodeMessageThread()
+                decode_message.init(data, self._client, self._network_manager)
+                decode_message.run()
             except:
                 print("Client {} disconnected".format(self._client.get_id()))
                 break
