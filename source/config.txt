@@ -1,4 +1,4 @@
-start = host
+start = join
 client_team = 1
 
 host_sounds_folder = mertaranta

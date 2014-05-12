@@ -6,13 +6,9 @@ class Client():
         self._socket = socket
         self._connected = True
         self._team = 0
-        self._send_files_thread = None
         
     def get_id(self):
         return self._id
-
-    def get_send_files_thread(self):
-        return self._send_files_thread
 
     def set_send_files_thread(self, send_files_thread):
         self._send_files_thread = send_files_thread
