@@ -18,7 +18,6 @@
 import client
 import socket
 import time
-import re
 import client_thread
 import os
 import decode_message_thread
