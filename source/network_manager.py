@@ -85,7 +85,7 @@ class NetworkManager():
     def _send_validate_files(self, client):
         search_path = self._log_reader.get_path_sounds()
 
-        try: # TODO Check if the folder is empty
+        try:
             for directory in os.listdir(search_path):
                 for file in os.listdir(search_path + directory):
                     if file.endswith(".wav"):
