@@ -736,7 +736,7 @@ class Commentator():
                     self._send_play_sound_command_to_clients(self._log_reader.get_path_sounds() + audio_file_client, None)
         
     def play_file(self, path):
-        if not self._is_currently_saying_something():
+        #if not self._is_currently_saying_something(): # Stop playing the previous comment and play the asked file
             self._last_audio_file_duration_in_seconds = self._get_file_duration(path)
             self._started_saying_something_timestamp_in_seconds = time.time()
             winsound.PlaySound(path, winsound.SND_ASYNC)
