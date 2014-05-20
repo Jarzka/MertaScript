@@ -199,8 +199,7 @@ class NetworkManager():
                 if os.path.isfile(filename):
                     pass # TODO CHECK SIZE
                 else:
-                    print("Missing sound file. Preparing to download it from the server...")
-                    # TODO Request file using HTTP
+                    print("Warning: missing sound file!")
             except FileNotFoundError as e:
                 print("Warning: " + e.strerror + ": " + e.filename)
             
