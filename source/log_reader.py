@@ -178,6 +178,8 @@ class LogReader():
             return True
         if self._scan_line_max_rounds(line):
             return True
+        if self._scan_line_c4_time(line):
+            return True
         if self._scan_line_round_time(line):
             return True
         if self._scan_line_bomb_plant(line):
@@ -493,6 +495,23 @@ class LogReader():
             return True
         return False
 
+    def _scan_line_c4_time(self, line):
+        reg_ex = "mp_c4timer.+?\d+"
+        match = re.search(reg_ex, line)
+
+        if match:
+            print("Catch: {}".format(line))
+            # We need to get the value. Do this by selecting the digits from the match
+            match2 = re.search("timer.+\d+", match.group(0))
+            if match2:
+                match3 = re.search("\d+", match2.group(0))
+                if match3:
+                    c4_time = int(match3.group(0))
+                    self._commentator.set_c4_time(c4_time)
+                    print("C4 time changed to {}".format(c4_time))
+            return True
+        return False
+
     def _scan_line_round_time(self, line):
         reg_ex = "mp_roundtime.+?\d+"
         match = re.search(reg_ex, line)
@@ -516,6 +535,7 @@ class LogReader():
 
         if match:
             print("Catch: {}".format(line))
+            self._commentator.handle_event_bomb_planted()
             if self._commentator.get_team_side(self._commentator.get_client_team()) == "t":
                 self._commentator.handle_event(commentator.Commentator.SOUND_ID_BOMB_PLANTED_CLIENT_TEAM)
             return True
