@@ -862,7 +862,7 @@ class Commentator():
                 self.handle_event(self.SOUND_ID_WIN_CLIENT)
 
             # Are the points specific?
-            if self.get_client_team_points() == 1 and self.get_enemy_team_points() == 0:
+            elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 0:
                 self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_1_0)
             elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 1:
                 self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_1_1)
@@ -898,7 +898,7 @@ class Commentator():
                 self.handle_event(self.SOUND_ID_WIN_ENEMY)
 
             # Are the points specific?
-            if self.get_client_team_points() == 0 and self.get_enemy_team_points() == 1:
+            elif self.get_client_team_points() == 0 and self.get_enemy_team_points() == 1:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_1_0)
             else:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM)
