@@ -74,7 +74,11 @@ class NetworkManager():
                 connected_client_thread.init(c, self)
                 connected_client_thread.start()
 
-                self._send_validate_files(c)
+                # TODO If we send all CHECK_FILE messages at once they might arrive at the client
+                # as one very long message. If the client reads MAX_BUFFER_SIZE characters from the buffer
+                # at once, the last message might not be read correctly. This needs to be fixed
+                # before this method can be used.
+                # self._send_validate_files(c)
             except socket.error as e:
                 print("Error listening client connections: {}".format(e))
                 break
