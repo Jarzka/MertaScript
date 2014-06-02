@@ -17,6 +17,10 @@ class ClientThread(Thread):
 
         while True:
             try:
+                # TODO If the length of the messages exceeds the buffer size, it is possible that
+                # the the last message is not read completely. One possible way to fix this
+                # is to read data from the buffer character by character and handle the message
+                # when '>' character is read.
                 data = self._client.get_socket().recv(self._network_manager.get_buffer_size())
                 # print("Got message from client id {}: {}".format(self._client.get_id(), data))
                 decode_message = decode_message_thread.DecodeMessageThread()
