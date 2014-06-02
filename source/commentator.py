@@ -301,10 +301,7 @@ class Commentator():
 
         # *************** Round Start ***************
 
-        if self._handle_event_round_start_client_winning(event_id): return True
-        if self._handle_event_round_start_enemy_team_winning(event_id): return True
-        if self._handle_event_round_start_client_winning_massively(event_id): return True
-        if self._handle_event_round_start_enemy_team_winning_massively(event_id): return True
+        if self._handle_event_round_start(event_id): return True
                 
         # *************** Bomb planted ***************
 
@@ -670,6 +667,18 @@ class Commentator():
 
         return False
 
+    def _handle_event_round_start(self, event_id):
+        # Sometimes the round start event occurs in the game log after the match has ended.
+        # This may be a bug in the logging system so do not handle the round start event
+        # when the match has ended
+        if self._team1_points < self._max_rounds / 2 and self._team2_points < self._max_rounds / 2:
+            if self._handle_event_round_start_client_winning(event_id): return True
+            if self._handle_event_round_start_enemy_team_winning(event_id): return True
+            if self._handle_event_round_start_client_winning_massively(event_id): return True
+            if self._handle_event_round_start_enemy_team_winning_massively(event_id): return True
+
+        return False
+
     def _handle_event_round_start_client_winning(self, event_id):
         if event_id == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING \
         and self._get_bool_from_percent(self.PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING):
@@ -696,7 +705,7 @@ class Commentator():
             file_client = self._select_dictionary_sound_randomly(
                 self._sound_dictionary_round_start_client_team_winning_massively)
             file_enemy = self._select_dictionary_sound_randomly\
-                    (self._sound_dictionary_round_start_enemy_team_winning_massively)
+                (self._sound_dictionary_round_start_enemy_team_winning_massively)
             self._handle_event_with_audio_files(file_client, file_enemy)
             return True
 
@@ -706,9 +715,9 @@ class Commentator():
         if event_id == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY \
         and self._get_bool_from_percent(self.PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY):
             file_client = self._select_dictionary_sound_randomly\
-                    (self._sound_dictionary_round_start_enemy_team_winning_massively)
+                (self._sound_dictionary_round_start_enemy_team_winning_massively)
             file_enemy = self._select_dictionary_sound_randomly\
-                    (self._sound_dictionary_round_start_client_team_winning_massively)
+                (self._sound_dictionary_round_start_client_team_winning_massively)
             self._handle_event_with_audio_files(file_client, file_enemy)
             return True
 
@@ -780,7 +789,7 @@ class Commentator():
     
     def set_round_start_time(self, time_in_seconds):
         self._round_start_timestamp_in_seconds = time_in_seconds
-    
+
     def reset_points(self):
         print("Reseting team points")
         self._team1_points = 0
