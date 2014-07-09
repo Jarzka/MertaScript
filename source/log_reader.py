@@ -180,6 +180,8 @@ class LogReader():
             return True
         if self._scan_line_c4_time(line):
             return True
+        if self._scan_line_take_hostage(line):
+            return True
         if self._scan_line_round_time(line):
             return True
         if self._scan_line_defuse(line):
@@ -189,8 +191,6 @@ class LogReader():
         if self._scan_line_loading_map(line):
             return True
         if self._scan_line_game_end(line):
-            return True
-        if self._scan_line_hostage_taken(line):
             return True
         return False
 
@@ -514,6 +514,19 @@ class LogReader():
             return True
         return False
 
+    def _scan_line_take_hostage(self, line):
+        reg_ex = "triggered.+"
+        reg_ex += "Touched_A_Hostage"
+        match = re.search(reg_ex, line)
+
+        if match:
+            print("Catch: {}".format(line))
+            self._commentator.add_hostage_taken_time_bonus_if_necessery()
+            if self._commentator.get_team_side(self._commentator.get_client_team()) == "t":
+                self._commentator.handle_event(commentator.Commentator.SOUND_ID_HOSTAGE_TAKEN_ENEMY_TEAM)
+            return True
+        return False
+
     def _scan_line_round_time(self, line):
         reg_ex = "mp_roundtime.+?\d+"
         match = re.search(reg_ex, line)
@@ -573,15 +586,5 @@ class LogReader():
 
         if match:
             print("Catch: {}".format(line))
-            return True
-        return False
-
-
-    def _scan_line_hostage_taken(self, line):
-        reg_ex = "Touched_A_Hostage"
-        match = re.search(reg_ex, line)
-
-        if match:
-            self._commentator.reset_round_time()
             return True
         return False

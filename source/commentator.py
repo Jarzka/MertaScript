@@ -42,6 +42,7 @@ class Commentator():
     SOUND_ID_SCORE_ENEMY_TEAM_1_0 = 4544338 # Enemy team got a point and the scores are 0 for client and 1 for enemy
     SOUND_ID_SCORE_EVEN = 242422523 # ...
     SOUND_ID_DEFUSE_CLIENT_TEAM = 567473424654 # ...
+    SOUND_ID_HOSTAGE_TAKEN_ENEMY_TEAM = 56747333424654 # ..
     SOUND_ID_WIN_CLIENT = 24242256623 # ...
     SOUND_ID_WIN_ENEMY = 24242233523 # ...
     SOUND_ID_SCORE_DEFUSE_BOMB_ENEMY_TEAM = 19 # Enemy team got a point by defusing the bomb
@@ -75,6 +76,7 @@ class Commentator():
     PROBABILITY_SCORE_ENEMY_TEAM = 100
     PROBABILITY_SCORE_CLIENT_TEAM = 100
     PROBABILITY_DEFUSE_CLIENT_TEAM = 15
+    PROBABILITY_HOSTAGE_TAKEN_ENEMY_TEAM = 15
     PROBABILITY_WIN_CLIENT = 100
     PROBABILITY_WIN_ENEMY = 100
     PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
@@ -103,6 +105,8 @@ class Commentator():
         self._round_time_in_seconds = int(self._program.get_value_from_config_file("host_round_time"))
         self._max_rounds = int(self._program.get_value_from_config_file("host_max_rounds"))
         self._c4_time = int(self._program.get_value_from_config_file("host_c4_time"))
+        self._hostage_taken_time_bonus = int(self._program.get_value_from_config_file("host_hostage_taken_time_bonus"))
+        self._hostage_taken_time_bonus_given_in_this_round = False
 
         self._CLIENT_TEAM = int(self._program.get_value_from_config_file("client_team"))
         self._TEAM_1_PLAYER_NAMES = self._program.get_team_1_player_names_from_config_file()
@@ -165,6 +169,8 @@ class Commentator():
 
         self._sound_dictionary_bomb_planted_client_team = self._load_sound_files("bomb-planted-client")
 
+        self._sound_dictionary_hostage_taken_enemy_team = self._load_sound_files("hostage-taken-enemy")
+
     def get_team_1_player_names(self):
         return self._TEAM_1_PLAYER_NAMES
 
@@ -201,7 +207,18 @@ class Commentator():
         self._c4_time = time
 
     def set_time_left_to_c4_time(self):
+        # The easiest way to set the new amount of remaining time is to "fake" the round start timestamp.
+        # This may not be the most convenient way to solve this problem, but it works and does not
+        # cause problems.
         self.set_round_start_time(time.time() - self._round_time_in_seconds + self._c4_time)
+
+    def add_hostage_taken_time_bonus_if_necessery(self):
+        # The easiest way to set the new amount of remaining time is to "fake" the round start timestamp.
+        # This may not be the most convenient way to solve this problem, but it works and does not
+        # cause problems.
+        if self._hostage_taken_time_bonus_given_in_this_round is False:
+            self.set_round_start_time(time.time() - self._get_round_time_passed() + self._hostage_taken_time_bonus)
+            self._hostage_taken_time_bonus_given_in_this_round = True
 
     # The method randomly chooses a sound file from the given dictionary and returns it.
     # @param dictionary. key = SOUND_ID, value = file.wav
@@ -311,6 +328,10 @@ class Commentator():
 
         if self._handle_event_defuse_client(event_id): return True
         if self._handle_event_bomb_planted_client(event_id): return True
+
+        # *************** Hostage  ***************
+
+        if self._handle_event_hostage_taken_enemy(event_id): return True
 
         return False
 
@@ -673,6 +694,11 @@ class Commentator():
         return False
 
     def _handle_event_round_start(self, event_id):
+        if event_id == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING \
+        or event_id == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING \
+        or event_id == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY \
+        or event_id == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY:
+             self._hostage_taken_time_bonus_given_in_this_round = False
         # Sometimes the round start event occurs in the game log after the match has ended.
         # This may be a bug in the logging system so do not handle the round start event
         # when the match has ended
@@ -745,6 +771,15 @@ class Commentator():
             return True
 
         return False
+
+    def _handle_event_hostage_taken_enemy(self, event_id):
+        if event_id == self.SOUND_ID_HOSTAGE_TAKEN_ENEMY_TEAM \
+        and self._get_bool_from_percent(self.PROBABILITY_HOSTAGE_TAKEN_ENEMY_TEAM):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_hostage_taken_enemy_team)
+            self._handle_event_with_audio_files(file_client)
+            return True
+
+        return False
     
     # @param audioFileClient string The file to be played locally and to be send to clients who play in the same team than host
     # @param audioFileEnemy string The file to be sent to client who play in different team than the host
@@ -792,11 +827,11 @@ class Commentator():
     # @return Time left in seconds
     def _get_round_time_left(self):
         if self._round_start_timestamp_in_seconds is not 0:
-            return int(self._round_time_in_seconds -  self._get_match_time_passed())
+            return int(self._round_time_in_seconds - self._get_round_time_passed())
         return -1
         
     # @return Match time passed in seconds
-    def _get_match_time_passed(self):
+    def _get_round_time_passed(self):
         if self._round_start_timestamp_in_seconds is not 0:
             return int(time.time() - self._round_start_timestamp_in_seconds)
         return -1
