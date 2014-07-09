@@ -182,6 +182,8 @@ class LogReader():
             return True
         if self._scan_line_round_time(line):
             return True
+        if self._scan_line_defuse(line):
+            return True
         if self._scan_line_bomb_plant(line):
             return True
         if self._scan_line_loading_map(line):
@@ -528,6 +530,19 @@ class LogReader():
             return True
         return False
 
+    def _scan_line_defuse(self, line):
+        reg_ex = "triggered.+"
+        reg_ex += "Begin_Bomb_Defuse"
+        match = re.search(reg_ex, line)
+
+        if match:
+            print("Catch: {}".format(line))
+            if self._commentator.get_team_side(self._commentator.get_client_team()) == "ct":
+                self._commentator.handle_event(commentator.Commentator.SOUND_ID_DEFUSE_CLIENT_TEAM)
+            return True
+        return False
+
+
     def _scan_line_bomb_plant(self, line):
         reg_ex = "triggered.+"
         reg_ex += "Planted_The_Bomb"
@@ -535,7 +550,7 @@ class LogReader():
 
         if match:
             print("Catch: {}".format(line))
-            self._commentator.handle_event_bomb_planted()
+            self._commentator.set_time_left_to_c4_time()
             if self._commentator.get_team_side(self._commentator.get_client_team()) == "t":
                 self._commentator.handle_event(commentator.Commentator.SOUND_ID_BOMB_PLANTED_CLIENT_TEAM)
             return True

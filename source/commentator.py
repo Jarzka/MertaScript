@@ -41,6 +41,7 @@ class Commentator():
     SOUND_ID_SCORE_CLIENT_TEAM_2_3 = 23 # ...
     SOUND_ID_SCORE_ENEMY_TEAM_1_0 = 4544338 # Enemy team got a point and the scores are 0 for client and 1 for enemy
     SOUND_ID_SCORE_EVEN = 242422523 # ...
+    SOUND_ID_DEFUSE_CLIENT_TEAM = 567473424654 # ...
     SOUND_ID_WIN_CLIENT = 24242256623 # ...
     SOUND_ID_WIN_ENEMY = 24242233523 # ...
     SOUND_ID_SCORE_DEFUSE_BOMB_ENEMY_TEAM = 19 # Enemy team got a point by defusing the bomb
@@ -73,6 +74,7 @@ class Commentator():
     PROBABILITY_TEAMKILLER_ENEMY_TEAM = 100
     PROBABILITY_SCORE_ENEMY_TEAM = 100
     PROBABILITY_SCORE_CLIENT_TEAM = 100
+    PROBABILITY_DEFUSE_CLIENT_TEAM = 15
     PROBABILITY_WIN_CLIENT = 100
     PROBABILITY_WIN_ENEMY = 100
     PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
@@ -121,6 +123,8 @@ class Commentator():
 
         self._sound_dictionary_teamkiller_client_team = self._load_sound_files("teamkiller-client")
         self._sound_dictionary_teamkiller_enemy_team = self._load_sound_files("teamkiller-enemy")
+
+        self._sound_dictionary_defuse_client_team = self._load_sound_files("defuse-client")
 
         self._sound_dictionary_score_client_team = self._load_sound_files("score-client")
         self._sound_dictionary_score_client_team_1_0 = self._load_sound_files("score-client-1-0")
@@ -196,7 +200,7 @@ class Commentator():
     def set_c4_time(self, time):
         self._c4_time = time
 
-    def handle_event_bomb_planted(self):
+    def set_time_left_to_c4_time(self):
         self.set_round_start_time(time.time() - self._round_time_in_seconds + self._c4_time)
 
     # The method randomly chooses a sound file from the given dictionary and returns it.
@@ -303,8 +307,9 @@ class Commentator():
 
         if self._handle_event_round_start(event_id): return True
                 
-        # *************** Bomb planted ***************
+        # *************** Bomb  ***************
 
+        if self._handle_event_defuse_client(event_id): return True
         if self._handle_event_bomb_planted_client(event_id): return True
 
         return False
@@ -723,6 +728,15 @@ class Commentator():
 
         return False
 
+    def _handle_event_defuse_client(self, event_id):
+        if event_id == self.SOUND_ID_DEFUSE_CLIENT_TEAM \
+        and self._get_bool_from_percent(self.PROBABILITY_DEFUSE_CLIENT_TEAM):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_defuse_client_team)
+            self._handle_event_with_audio_files(file_client)
+            return True
+
+        return False
+
     def _handle_event_bomb_planted_client(self, event_id):
         if event_id == self.SOUND_ID_BOMB_PLANTED_CLIENT_TEAM \
         and self._get_bool_from_percent(self.PROBABILITY_BOMB_PLANTED_CLIENT_TEAM):
@@ -912,7 +926,6 @@ class Commentator():
             else:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM)
 
-    # Tells in which team the current client is playing
     # @return string ct or t
     def get_team_side(self, team_number):
         if team_number == 1:
