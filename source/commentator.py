@@ -694,11 +694,6 @@ class Commentator():
         return False
 
     def _handle_event_round_start(self, event_id):
-        if event_id == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING \
-        or event_id == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING \
-        or event_id == self.SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY \
-        or event_id == self.SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY:
-             self._hostage_taken_time_bonus_given_in_this_round = False
         # Sometimes the round start event occurs in the game log after the match has ended.
         # This may be a bug in the logging system so do not handle the round start event
         # when the match has ended
@@ -836,8 +831,9 @@ class Commentator():
             return int(time.time() - self._round_start_timestamp_in_seconds)
         return -1
     
-    def set_round_start_time(self, time_in_seconds):
-        self._round_start_timestamp_in_seconds = time_in_seconds
+    def start_new_round(self):
+        self._round_start_timestamp_in_seconds = int(time.time())
+        self._hostage_taken_time_bonus_given_in_this_round = False
 
     def reset_points(self):
         print("Reseting team points")
