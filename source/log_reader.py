@@ -411,7 +411,7 @@ class LogReader():
 
         if match:
             print("Catch: {}".format(line))
-            self._commentator.set_round_start_time(0)
+            self._commentator.reset_round_time()
             return True
         return False
 

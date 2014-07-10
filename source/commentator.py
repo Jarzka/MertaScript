@@ -834,6 +834,9 @@ class Commentator():
     def start_new_round(self):
         self._round_start_timestamp_in_seconds = int(time.time())
         self._hostage_taken_time_bonus_given_in_this_round = False
+	
+    def set_round_start_time(self, time):
+        self._round_start_timestamp_in_seconds = time
 
     def reset_points(self):
         print("Reseting team points")
