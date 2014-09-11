@@ -3,12 +3,12 @@
 # - Play audio files
 # - Knows team points and round time
 
-import winsound
 import wave
 import contextlib
 import time
 import random
 import os
+import subprocess
 
 class Commentator():
     # These constants are used to tell the commentator which type of sound file it's supposed to say
@@ -75,8 +75,8 @@ class Commentator():
     PROBABILITY_TEAMKILLER_ENEMY_TEAM = 100
     PROBABILITY_SCORE_ENEMY_TEAM = 100
     PROBABILITY_SCORE_CLIENT_TEAM = 100
-    PROBABILITY_DEFUSE_CLIENT_TEAM = 15
-    PROBABILITY_HOSTAGE_TAKEN_ENEMY_TEAM = 15
+    PROBABILITY_DEFUSE_CLIENT_TEAM = 30
+    PROBABILITY_HOSTAGE_TAKEN_ENEMY_TEAM = 30
     PROBABILITY_WIN_CLIENT = 100
     PROBABILITY_WIN_ENEMY = 100
     PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC = 100
@@ -90,6 +90,7 @@ class Commentator():
     PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 5
     
     def __init__(self, program, log_reader):
+        self._play_process = None
         self._program = program
         self._log_reader = log_reader
 
@@ -190,11 +191,16 @@ class Commentator():
         try:
             for file in os.listdir(search_path):
                 if file.endswith(".wav"):
+                    # TODO Temporary fix.
+                    # For some reason Python 3 is unable to handle the following characters correctly. Correct them manually.
+                    file = file.replace("\udce4", "ä");
+                    file = file.replace("\udcf6", "ö");
                     sound_files_array.append(path + os.path.sep + file)
         except FileNotFoundError as e:
             print("Warning: " + search_path + " " + "is empty.")
 
         return sound_files_array
+        
 
     def set_round_time(self, time_in_seconds):
         self._round_time_in_seconds = time_in_seconds
@@ -792,7 +798,16 @@ class Commentator():
         #if not self._is_currently_saying_something(): # Stop playing the previous comment and play the asked file
             self._last_audio_file_duration_in_seconds = self._get_file_duration(path)
             self._started_saying_something_timestamp_in_seconds = time.time()
-            winsound.PlaySound(path, winsound.SND_ASYNC)
+            try:
+                self._play_process.terminate()
+            except Exception as e:
+                print("Warning: Unable to terminate audio process: {}".format(e))
+                
+            try:
+                print("Playing sound: {}".format(path))
+                self._play_process = subprocess.Popen(['aplay', path])
+            except Exception as e:
+                print("Warning: Unable to play audio file: {}".format(e))
             
     def _get_file_duration(self, file_path):
         with contextlib.closing(wave.open(file_path,'r')) as f:
