@@ -120,7 +120,7 @@ class NetworkManager():
                 print("Trying again...")
                 continue
             
-            print ("Connection established: {}".format(self._socket.getsockname()))
+            print ("Connection established!")
             
             # Send team info to the server
             
