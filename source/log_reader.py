@@ -150,6 +150,12 @@ class LogReader():
             return True
         if self._scan_line_team1_kills_enemy_machine_gun_headshot(line):
             return True
+        if self._scan_line_team2_kills_enemy_machine_gun_headshot(line):
+            return True
+        if self._scan_line_team1_juhis_kills_enemy_headshot(line):
+            return True
+        if self._scan_line_team2_juhis_kills_enemy_headshot(line):
+            return True
         if self._scan_line_team1_kills_enemy_headshot(line):
             return True
         if self._scan_line_team2_kills_enemy_headshot(line):
@@ -246,6 +252,54 @@ class LogReader():
                     self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM)
                 elif self._commentator.get_client_team() == 2:
                     self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM)
+                return True
+        return False
+
+    def _scan_line_team2_kills_enemy_machine_gun_headshot(self, line):
+        reg_ex = ".* killed .*"
+        reg_ex += self._construct_regex_team1()
+        reg_ex += ".*with.*(negev|m249).*"
+        match = re.search(reg_ex, line)
+
+        if match:
+            if not self._is_team_1_player_the_victim(match.group(0)):
+                print("Catch: {}".format(line))
+                if self._commentator.get_client_team() == 1:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM)
+                elif self._commentator.get_client_team() == 2:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM)
+                return True
+        return False
+
+    def _scan_line_team1_juhis_kills_enemy_headshot(self, line):
+        reg_ex = "(Juhiz|Juhis|Raikiri)"
+        reg_ex += ".* killed .*"
+        reg_ex += "headshot"
+        match = re.search(reg_ex, line)
+
+        if match:
+            if not self._is_team_1_player_the_victim(match.group(0)):
+                print("Catch: {}".format(line))
+                if self._commentator.get_client_team() == 1:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_JUHIS_CLIENT_TEAM)
+                elif self._commentator.get_client_team() == 2:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM)
+                return True
+        return False
+
+    def _scan_line_team2_juhis_kills_enemy_headshot(self, line):
+        reg_ex = "(Juhiz|Juhis|Raikiri)"
+        reg_ex += ".* killed .*"
+        reg_ex += "headshot"
+        match = re.search(reg_ex, line)
+
+        if match:
+            if not self._is_team_1_player_the_victim(match.group(0)):
+                print("Catch: {}".format(line))
+                if self._commentator.get_client_team() == 1:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM)
+                elif self._commentator.get_client_team() == 2:
+                    self._commentator.handle_event(commentator.Commentator.SOUND_ID_KILL_HEADSHOT_JUHIS_CLIENT_TEAM)
                 return True
         return False
 
