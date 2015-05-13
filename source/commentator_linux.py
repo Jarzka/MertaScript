@@ -14,6 +14,7 @@ class Commentator():
     # These constants are used to tell the commentator which type of sound file it's supposed to say
     SOUND_ID_KILL_CLIENT_TEAM = 1 # Not used atm
     SOUND_ID_KILL_ENEMY_TEAM = 3
+    SOUND_ID_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM = 33425738952 # Client team killed an enemy with machine got and got headshot
     SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM = 2 # Client team killed an enemy with headshot
     SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM = 4  # Enemy team killed an client with headshot
     SOUND_ID_KILL_KNIFE_CLIENT_TEAM = 24 # Client team killed an enemy with knife
@@ -56,7 +57,6 @@ class Commentator():
     SOUND_ID_TIME_0_30 = 14 # ...
     SOUND_ID_TIME_0_40 = 15454 # ...
     SOUND_ID_TIME_1_00 = 153342 # ...
-    SOUND_ID_ROUND_DRAW = 5653465646
     SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING = 16 # Round started and the client team has more points
     SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 16344
     SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING = 17 # Round started and the enemy team has more points
@@ -66,6 +66,7 @@ class Commentator():
     # These values present how likely it is that the commentator will say the asked event id
     PROBABILITY_KILL_CLIENT_TEAM = 10 # Not used atm
     PROBABILITY_KILL_ENEMY_TEAM = 10
+    PROBABILITY_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM = 100
     PROBABILITY_KILL_HEADSHOT_CLIENT_TEAM = 100 
     PROBABILITY_KILL_HEADSHOT_ENEMY_TEAM = 100
     PROBABILITY_KILL_KNIFE_CLIENT_TEAM = 100 
@@ -120,6 +121,7 @@ class Commentator():
 
         # Initialise dictionaries
 
+        self._sound_dictionary_kill_headshot_client_team = self._load_sound_files("kill-headshot-machine-gun-client")
         self._sound_dictionary_kill_headshot_client_team = self._load_sound_files("kill-headshot-client")
         self._sound_dictionary_kill_headshot_enemy_team = self._load_sound_files("kill-headshot-enemy")
 
@@ -283,6 +285,7 @@ class Commentator():
 
         # ************** Kills **************
 
+        if self._handle_event_kill_headshot_machine_gun_client(event_id): return True
         if self._handle_event_kill_headshot_client(event_id): return True
         if self._handle_event_kill_headshot_enemy(event_id): return True
         if self._handle_event_kill_knife_client(event_id): return True
@@ -351,6 +354,16 @@ class Commentator():
         # *************** Hostage  ***************
 
         if self._handle_event_hostage_taken_enemy(event_id): return True
+
+        return False
+
+    def _handle_event_kill_headshot_machine_gun_client(self, event_id):
+        if (event_id == self.SOUND_ID_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM
+            and self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM)):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_machine_gun_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_enemy_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
 
         return False
 

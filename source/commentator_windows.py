@@ -14,6 +14,7 @@ class Commentator():
     # These constants are used to tell the commentator which type of sound file it's supposed to say
     SOUND_ID_KILL_CLIENT_TEAM = 1 # Not used atm
     SOUND_ID_KILL_ENEMY_TEAM = 3
+    SOUND_ID_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM = 33425738952 # Client team killed an enemy with machine got and got headshot
     SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM = 2 # Client team killed an enemy with headshot
     SOUND_ID_KILL_HEADSHOT_ENEMY_TEAM = 4  # Enemy team killed an client with headshot
     SOUND_ID_KILL_KNIFE_CLIENT_TEAM = 24 # Client team killed an enemy with knife
@@ -40,6 +41,8 @@ class Commentator():
     SOUND_ID_SCORE_CLIENT_TEAM_6_1 = 11 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_2_3 = 23 # ...
     SOUND_ID_SCORE_ENEMY_TEAM_1_0 = 4544338 # Enemy team got a point and the scores are 0 for client and 1 for enemy
+    SOUND_ID_SCORE_ENEMY_TEAM_2_0 = 4544338 # ...
+    SOUND_ID_SCORE_ENEMY_TEAM_3_1 = 4544338 # ...
     SOUND_ID_SCORE_EVEN = 242422523 # ...
     SOUND_ID_DEFUSE_CLIENT_TEAM = 567473424654 # ...
     SOUND_ID_HOSTAGE_TAKEN_ENEMY_TEAM = 56747333424654 # ..
@@ -63,6 +66,7 @@ class Commentator():
     # These values present how likely it is that the commentator will say the asked event id
     PROBABILITY_KILL_CLIENT_TEAM = 10 # Not used atm
     PROBABILITY_KILL_ENEMY_TEAM = 10
+    PROBABILITY_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM = 100
     PROBABILITY_KILL_HEADSHOT_CLIENT_TEAM = 100 
     PROBABILITY_KILL_HEADSHOT_ENEMY_TEAM = 100
     PROBABILITY_KILL_KNIFE_CLIENT_TEAM = 100 
@@ -83,6 +87,7 @@ class Commentator():
     PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC = 100
     PROBABILITY_SUICIDE = 100
     PROBABILITY_TIME = 30
+    PROBABILITY_ROUND_DRAW = 100
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 40
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 70
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING = 40
@@ -115,6 +120,7 @@ class Commentator():
 
         # Initialise dictionaries
 
+        self._sound_dictionary_kill_headshot_machine_gun_client_team = self._load_sound_files("kill-headshot-machine-gun-client")
         self._sound_dictionary_kill_headshot_client_team = self._load_sound_files("kill-headshot-client")
         self._sound_dictionary_kill_headshot_enemy_team = self._load_sound_files("kill-headshot-enemy")
 
@@ -144,6 +150,8 @@ class Commentator():
         self._sound_dictionary_score_client_team_5_1 = self._load_sound_files("score-client-5-1")
         self._sound_dictionary_score_client_team_6_1 = self._load_sound_files("score-client-6-1")
         self._sound_dictionary_score_enemy_team_1_0 = self._load_sound_files("score-enemy-1-0")
+        self._sound_dictionary_score_enemy_team_2_0 = self._load_sound_files("score-enemy-2-0")
+        self._sound_dictionary_score_enemy_team_3_1 = self._load_sound_files("score-enemy-3-1")
         self._sound_dictionary_score_even_client_team = self._load_sound_files("score-even-client")
         self._sound_dictionary_score_enemy_team = self._load_sound_files("score-enemy")
         self._sound_dictionary_score_win_client_team = self._load_sound_files("score-win-client")
@@ -160,6 +168,7 @@ class Commentator():
         self._sound_dictionary_time_0_40 = self._load_sound_files("time-0-40")
         self._sound_dictionary_time_1_00 = self._load_sound_files("time-1-00")
 
+        self._sound_dictionary_round_draw = self._load_sound_files("round-draw")
         self._sound_dictionary_round_start_client_team_winning = self._load_sound_files("round-start-client-winning")
         self._sound_dictionary_round_start_enemy_team_winning = self._load_sound_files("round-start-enemy-winning")
         self._sound_dictionary_round_start_client_team_winning_massively =\
@@ -270,6 +279,7 @@ class Commentator():
 
         # ************** Kills **************
 
+        if self._handle_event_kill_headshot_machine_gun_client(event_id): return True
         if self._handle_event_kill_headshot_client(event_id): return True
         if self._handle_event_kill_headshot_enemy(event_id): return True
         if self._handle_event_kill_knife_client(event_id): return True
@@ -319,6 +329,12 @@ class Commentator():
         if self._handle_event_score_client_5_1(event_id): return True
         if self._handle_event_score_client_6_1(event_id): return True
         if self._handle_event_score_enemy_1_0(event_id): return True
+        if self._handle_event_score_enemy_2_0(event_id): return True
+        if self._handle_event_score_enemy_3_1(event_id): return True
+
+        # *************** Round Draw ***************
+
+        if self._handle_event_round_draw(event_id): return True
 
         # *************** Round Start ***************
 
@@ -332,6 +348,16 @@ class Commentator():
         # *************** Hostage  ***************
 
         if self._handle_event_hostage_taken_enemy(event_id): return True
+
+        return False
+
+    def _handle_event_kill_headshot_machine_gun_client(self, event_id):
+        if (event_id == self.SOUND_ID_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM
+            and self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM)):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_machine_gun_client_team)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_enemy_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
 
         return False
 
@@ -693,6 +719,36 @@ class Commentator():
 
         return False
 
+    def _handle_event_score_enemy_2_0(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_2_0 \
+                and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team_2_0)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_2_0)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_score_enemy_3_1(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_3_1 \
+                and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team_3_1)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_3_1)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_round_draw(self, event_id):
+        if event_id == self.SOUND_ID_ROUND_DRAW \
+                and self._get_bool_from_percent(self.PROBABILITY_ROUND_DRAW):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_round_draw)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_round_draw)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
     def _handle_event_round_start(self, event_id):
         # Sometimes the round start event occurs in the game log after the match has ended.
         # This may be a bug in the logging system so do not handle the round start event
@@ -957,6 +1013,10 @@ class Commentator():
             # Are the points specific?
             elif self.get_client_team_points() == 0 and self.get_enemy_team_points() == 1:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_1_0)
+            elif self.get_client_team_points() == 0 and self.get_enemy_team_points() == 2:
+                self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_2_0)
+            elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 3:
+                self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_3_1)
             else:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM)
 
