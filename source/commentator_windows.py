@@ -42,8 +42,8 @@ class Commentator():
     SOUND_ID_SCORE_CLIENT_TEAM_6_1 = 11 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_2_3 = 23 # ...
     SOUND_ID_SCORE_ENEMY_TEAM_1_0 = 4544338 # Enemy team got a point and the scores are 0 for client and 1 for enemy
-    SOUND_ID_SCORE_ENEMY_TEAM_2_0 = 4544338 # ...
-    SOUND_ID_SCORE_ENEMY_TEAM_3_1 = 4544338 # ...
+    SOUND_ID_SCORE_ENEMY_TEAM_2_0 = 455888 # ...
+    SOUND_ID_SCORE_ENEMY_TEAM_3_1 = 43338 # ...
     SOUND_ID_SCORE_EVEN = 242422523 # ...
     SOUND_ID_DEFUSE_CLIENT_TEAM = 567473424654 # ...
     SOUND_ID_HOSTAGE_TAKEN_ENEMY_TEAM = 56747333424654 # ..
@@ -367,14 +367,15 @@ class Commentator():
         return False
 
     def _handle_event_kill_headshot_juhis_client(self, event_id):
-        if (event_id == self.SOUND_ID_KILL_HEADSHOT_JUHIS_CLIENT_TEAM
-            and self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_JUHIS_CLIENT_TEAM)):
-            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_juhis_client_team)
-            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_enemy_team)
-            self._handle_event_with_audio_files(file_client, file_enemy)
-            return True
-        else:
-            self._handle_event_kill_headshot_client(event_id)
+        if event_id == self.SOUND_ID_KILL_HEADSHOT_JUHIS_CLIENT_TEAM:
+            if self._get_bool_from_percent(self.PROBABILITY_KILL_HEADSHOT_JUHIS_CLIENT_TEAM):
+                file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_juhis_client_team)
+                file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_kill_headshot_enemy_team)
+                self._handle_event_with_audio_files(file_client, file_enemy)
+                return True
+            else:
+                return self._handle_event_kill_headshot_client(self.SOUND_ID_KILL_HEADSHOT_CLIENT_TEAM)
+
         return False
 
     def _handle_event_kill_headshot_client(self, event_id):
