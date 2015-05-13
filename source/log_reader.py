@@ -465,7 +465,7 @@ class LogReader():
         match = re.search(reg_ex, line)
 
         if match:
-            print("Catch: {}".format(line)
+            print("Catch: {}".format(line))
             self._commentator.handle_event(self._commentator.SOUND_ID_ROUND_DRAW)
             return True
         return False
