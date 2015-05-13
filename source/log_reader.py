@@ -166,6 +166,8 @@ class LogReader():
             return True
         if self._scan_line_suicide(line):
             return True
+        if self._scan_line_round_draw(line):
+            return True
         if self._scan_line_round_start(line):
             return True
         if self._scan_line_round_end(line):
@@ -381,6 +383,17 @@ class LogReader():
         if match:
             print("Catch: {}".format(line))
             self._commentator.handle_event(commentator.Commentator.SOUND_ID_SUICIDE)
+            return True
+        return False
+
+    def _scan_line_round_draw(self, line):
+        reg_ex = "World triggered.*"
+        reg_ex += "Round_Draw"
+        match = re.search(reg_ex, line)
+
+        if match:
+            print("Catch: {}".format(line)
+            self._commentator.handle_event(self._commentator.SOUND_ID_ROUND_DRAW)
             return True
         return False
 

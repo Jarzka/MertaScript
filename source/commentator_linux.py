@@ -56,6 +56,7 @@ class Commentator():
     SOUND_ID_TIME_0_30 = 14 # ...
     SOUND_ID_TIME_0_40 = 15454 # ...
     SOUND_ID_TIME_1_00 = 153342 # ...
+    SOUND_ID_ROUND_DRAW = 5653465646
     SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING = 16 # Round started and the client team has more points
     SOUND_ID_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 16344
     SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING = 17 # Round started and the enemy team has more points
@@ -85,6 +86,7 @@ class Commentator():
     PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC = 100
     PROBABILITY_SUICIDE = 100
     PROBABILITY_TIME = 30
+    PROBABILITY_ROUND_DRAW = 100
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING = 40
     PROBABILITY_ROUND_START_CLIENT_TEAM_WINNING_MASSIVELY = 70
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING = 40
@@ -165,6 +167,7 @@ class Commentator():
         self._sound_dictionary_time_0_40 = self._load_sound_files("time-0-40")
         self._sound_dictionary_time_1_00 = self._load_sound_files("time-1-00")
 
+        self._sound_dictionary_round_draw = self._load_sound_files("round-draw")
         self._sound_dictionary_round_start_client_team_winning = self._load_sound_files("round-start-client-winning")
         self._sound_dictionary_round_start_enemy_team_winning = self._load_sound_files("round-start-enemy-winning")
         self._sound_dictionary_round_start_client_team_winning_massively =\
@@ -331,6 +334,10 @@ class Commentator():
         if self._handle_event_score_enemy_1_0(event_id): return True
         if self._handle_event_score_enemy_2_0(event_id): return True
         if self._handle_event_score_enemy_3_1(event_id): return True
+
+        # *************** Round Draw ***************
+
+        if self._handle_event_round_draw(event_id): return True
 
         # *************** Round Start ***************
 
@@ -720,6 +727,16 @@ class Commentator():
                 and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
             file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team_3_1)
             file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_3_1)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_round_draw(self, event_id):
+        if event_id == self.SOUND_ID_ROUND_DRAW \
+                and self._get_bool_from_percent(self.PROBABILITY_ROUND_DRAW):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_round_draw)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_round_draw)
             self._handle_event_with_audio_files(file_client, file_enemy)
             return True
 
