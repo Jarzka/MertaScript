@@ -54,6 +54,7 @@ class Commentator():
     SOUND_ID_TIME_0_03 = 3322 # ...
     SOUND_ID_TIME_0_10 = 13 # ...
     SOUND_ID_TIME_0_15 = 2213 # ...
+    SOUND_ID_TIME_0_28 = 26724343785 # ...
     SOUND_ID_TIME_0_20 = 15 # ...
     SOUND_ID_TIME_0_30 = 14 # ...
     SOUND_ID_TIME_0_40 = 15454 # ...
@@ -168,6 +169,7 @@ class Commentator():
         self._sound_dictionary_time_0_10 = self._load_sound_files("time-0-10")
         self._sound_dictionary_time_0_15 = self._load_sound_files("time-0-15")
         self._sound_dictionary_time_0_20 = self._load_sound_files("time-0-20")
+        self._sound_dictionary_time_0_28 = self._load_sound_files("time-0-28")
         self._sound_dictionary_time_0_30 = self._load_sound_files("time-0-30")
         self._sound_dictionary_time_0_40 = self._load_sound_files("time-0-40")
         self._sound_dictionary_time_1_00 = self._load_sound_files("time-1-00")
@@ -301,6 +303,7 @@ class Commentator():
         if self._handle_event_time_0_10(event_id): return True
         if self._handle_event_time_0_15(event_id): return True
         if self._handle_event_time_0_20(event_id): return True
+        if self._handle_event_time_0_28(event_id): return True
         if self._handle_event_time_0_30(event_id): return True
         if self._handle_event_time_0_40(event_id): return True
         if self._handle_event_time_1_00(event_id): return True
@@ -498,6 +501,15 @@ class Commentator():
         if event_id == self.SOUND_ID_TIME_0_20 \
         and self._get_bool_from_percent(self.PROBABILITY_TIME):
             file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_20)
+            self._handle_event_with_audio_files(file_client, file_client)
+            return True
+
+        return False
+
+    def _handle_event_time_0_28(self, event_id):
+        if event_id == self.SOUND_ID_TIME_0_28 \
+                and self._get_bool_from_percent(self.PROBABILITY_TIME):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_time_0_28)
             self._handle_event_with_audio_files(file_client, file_client)
             return True
 
@@ -946,6 +958,8 @@ class Commentator():
             self.handle_event(self.SOUND_ID_TIME_0_15)
         elif round_time_left == 20:
             self.handle_event(self.SOUND_ID_TIME_0_20)
+        elif round_time_left == 28:
+            self.handle_event(self.SOUND_ID_TIME_0_28)
         elif round_time_left == 30:
             self.handle_event(self.SOUND_ID_TIME_0_30)
         elif round_time_left == 40:
