@@ -274,6 +274,7 @@ class LogReader():
     def _scan_line_team1_juhis_kills_enemy_headshot(self, line):
         reg_ex = "(Juhiz|Juhis|Raikiri)"
         reg_ex += ".* killed .*"
+        reg_ex += ".*with.*elite.*"
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
 
@@ -290,6 +291,7 @@ class LogReader():
     def _scan_line_team2_juhis_kills_enemy_headshot(self, line):
         reg_ex = "(Juhiz|Juhis|Raikiri)"
         reg_ex += ".* killed .*"
+        reg_ex += ".*with.*elite.*"
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
 
