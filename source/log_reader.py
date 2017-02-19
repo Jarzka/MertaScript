@@ -228,7 +228,8 @@ class LogReader():
         if match:
             # This is a good match if there is NO team 1 player name BEFORE or AFTER the word killed
             if not self._is_team_1_player_the_killer(match.group(0)) \
-            and not self._is_team_1_player_the_victim(match.group(0)):
+                    and not self._is_team_1_player_the_victim(match.group(0)) \
+                    and "by the bomb" not in line:  # Was added to the log sometime in February 2017. Ignore it.
                 print("Catch: {}".format(line))
                 print("Teamkiller in team 2!")
                 if self._commentator.get_client_team() == 1:
