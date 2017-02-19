@@ -6,3 +6,4 @@ source/.pydevproject
 
 *.pyc
 *.wav
+.idea
