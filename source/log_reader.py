@@ -206,7 +206,7 @@ class LogReader():
 
     def _scan_line_team1_teamkiller(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += self._construct_regex_team1()
         match = re.search(reg_ex, line)
         if match:
@@ -223,12 +223,13 @@ class LogReader():
         # Actually the RegEx thinks that someone, who does not play in team 1, killed someone who does not play in team 1.
         # However, it is very likely that the player was team 2 player and he killed team 2 player.
 
-        reg_ex = ".* killed .*"
+        reg_ex = '.* killed ".*'
         match = re.search(reg_ex, line)
         if match:
             # This is a good match if there is NO team 1 player name BEFORE or AFTER the word killed
             if not self._is_team_1_player_the_killer(match.group(0)) \
-            and not self._is_team_1_player_the_victim(match.group(0)):
+                    and not self._is_team_1_player_the_victim(match.group(0)) \
+                    and "by the bomb" not in line:  # Was added to the log sometime in February 2017. Ignore it.
                 print("Catch: {}".format(line))
                 print("Teamkiller in team 2!")
                 if self._commentator.get_client_team() == 1:
@@ -240,7 +241,7 @@ class LogReader():
 
     def _scan_line_team1_kills_enemy_machine_gun_headshot(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += "with.*(negev|m249).*"
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
@@ -256,7 +257,7 @@ class LogReader():
         return False
 
     def _scan_line_team2_kills_enemy_machine_gun_headshot(self, line):
-        reg_ex = ".* killed .*"
+        reg_ex = '.* killed ".*'
         reg_ex += self._construct_regex_team1()
         reg_ex += ".*with.*(negev|m249).*"
         match = re.search(reg_ex, line)
@@ -273,7 +274,7 @@ class LogReader():
 
     def _scan_line_team1_juhis_kills_enemy_headshot(self, line):
         reg_ex = "(Juhiz|Juhis|Raikiri)"
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += ".*with.*elite.*"
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
@@ -290,7 +291,7 @@ class LogReader():
 
     def _scan_line_team2_juhis_kills_enemy_headshot(self, line):
         reg_ex = "(Juhiz|Juhis|Raikiri)"
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += ".*with.*elite.*"
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
@@ -307,7 +308,7 @@ class LogReader():
 
     def _scan_line_team1_kills_enemy_headshot(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += "headshot"
         match = re.search(reg_ex, line)
 
@@ -325,7 +326,7 @@ class LogReader():
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
         # However, it is very likely that the killer was team 2 player.
 
-        reg_ex = ".* killed .*"
+        reg_ex = '.* killed ".*'
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+headshot"
         match = re.search(reg_ex, line)
@@ -342,7 +343,7 @@ class LogReader():
 
     def _scan_line_team1_kills_enemy_knife(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += "with.+"
         reg_ex += "knife"
         match = re.search(reg_ex, line)
@@ -361,7 +362,7 @@ class LogReader():
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
         # However, it is very likely that the killer was team 2 player.
 
-        reg_ex = ".* killed .*"
+        reg_ex = '.* killed ".*'
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+with.+"
         reg_ex += "knife"
@@ -379,7 +380,7 @@ class LogReader():
 
     def _scan_line_team1_kills_enemy_hegrenade(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += "with.+"
         reg_ex += "hegrenade"
         match = re.search(reg_ex, line)
@@ -398,7 +399,7 @@ class LogReader():
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
         # However, it is very likely that the killer was team 2 player.
 
-        reg_ex = ".* killed .*"
+        reg_ex = '.* killed ".*'
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+with.+"
         reg_ex += "hegrenade"
@@ -416,7 +417,7 @@ class LogReader():
 
     def _scan_line_team1_kills_enemy_inferno(self, line):
         reg_ex = self._construct_regex_team1()
-        reg_ex += ".* killed .*"
+        reg_ex += '.* killed ".*'
         reg_ex += "with.+"
         reg_ex += "inferno"
         match = re.search(reg_ex, line)
@@ -435,7 +436,7 @@ class LogReader():
         # Actually the RegEx thinks that someone, who does not play in team 1, killed team 1 player.
         # However, it is very likely that the killer was team 2 player.
 
-        reg_ex = ".* killed .*"
+        reg_ex = '.* killed ".*'
         reg_ex += self._construct_regex_team1()
         reg_ex += ".+with.+"
         reg_ex += "inferno"
