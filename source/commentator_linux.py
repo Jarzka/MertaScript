@@ -40,10 +40,13 @@ class Commentator():
     SOUND_ID_SCORE_CLIENT_TEAM_4_0 = 9 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_5_1 = 10 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_6_1 = 11 # ...
+    SOUND_ID_SCORE_CLIENT_TEAM_1_7 = 1563656533655357861 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_2_3 = 23 # ...
     SOUND_ID_SCORE_ENEMY_TEAM_1_0 = 4544338 # Enemy team got a point and the scores are 0 for client and 1 for enemy
     SOUND_ID_SCORE_ENEMY_TEAM_2_0 = 455888 # ...
     SOUND_ID_SCORE_ENEMY_TEAM_3_1 = 43338 # ...
+    SOUND_ID_SCORE_ENEMY_TEAM_1_1 = 43334544545578 # ...
+    SOUND_ID_SCORE_ENEMY_TEAM_2_2 = 433764764756654869458938 # ...
     SOUND_ID_SCORE_EVEN = 242422523 # ...
     SOUND_ID_DEFUSE_CLIENT_TEAM = 567473424654 # ...
     SOUND_ID_HOSTAGE_TAKEN_ENEMY_TEAM = 56747333424654 # ..
@@ -65,15 +68,15 @@ class Commentator():
     SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING = 17 # Round started and the enemy team has more points
     SOUND_ID_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY = 1754
     SOUND_ID_BOMB_PLANTED_CLIENT_TEAM = 18 # Client's team planted the bomb
-    
+
     # These values present how likely it is that the commentator will say the asked event id
     PROBABILITY_KILL_CLIENT_TEAM = 10 # Not used atm
     PROBABILITY_KILL_ENEMY_TEAM = 10
     PROBABILITY_KILL_HEADSHOT_JUHIS_CLIENT_TEAM = 100
     PROBABILITY_KILL_HEADSHOT_MACHINE_GUN_CLIENT_TEAM = 100
-    PROBABILITY_KILL_HEADSHOT_CLIENT_TEAM = 100 
+    PROBABILITY_KILL_HEADSHOT_CLIENT_TEAM = 100
     PROBABILITY_KILL_HEADSHOT_ENEMY_TEAM = 100
-    PROBABILITY_KILL_KNIFE_CLIENT_TEAM = 100 
+    PROBABILITY_KILL_KNIFE_CLIENT_TEAM = 100
     PROBABILITY_KILL_KNIFE_ENEMY_TEAM = 100
     PROBABILITY_KILL_HEGRENADE_CLIENT_TEAM = 100
     PROBABILITY_KILL_HEGRENADE_ENEMY_TEAM = 100
@@ -97,7 +100,7 @@ class Commentator():
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING = 40
     PROBABILITY_ROUND_START_ENEMY_TEAM_WINNING_MASSIVELY = 70
     PROBABILITY_BOMB_PLANTED_CLIENT_TEAM = 5
-    
+
     def __init__(self, program, log_reader):
         self._play_process = None
         self._program = program
@@ -155,9 +158,12 @@ class Commentator():
         self._sound_dictionary_score_client_team_4_0 = self._load_sound_files("score-client-4-0")
         self._sound_dictionary_score_client_team_5_1 = self._load_sound_files("score-client-5-1")
         self._sound_dictionary_score_client_team_6_1 = self._load_sound_files("score-client-6-1")
+        self._sound_dictionary_score_client_team_1_7 = self._load_sound_files("score-client-1-7")
         self._sound_dictionary_score_enemy_team_1_0 = self._load_sound_files("score-enemy-1-0")
         self._sound_dictionary_score_enemy_team_2_0 = self._load_sound_files("score-enemy-2-0")
         self._sound_dictionary_score_enemy_team_3_1 = self._load_sound_files("score-enemy-3-1")
+        self._sound_dictionary_score_enemy_team_1_1 = self._load_sound_files("score-enemy-1-1")
+        self._sound_dictionary_score_enemy_team_2_2 = self._load_sound_files("score-enemy-2-2")
         self._sound_dictionary_score_even_client_team = self._load_sound_files("score-even-client")
         self._sound_dictionary_score_enemy_team = self._load_sound_files("score-enemy")
         self._sound_dictionary_score_win_client_team = self._load_sound_files("score-win-client")
@@ -215,7 +221,7 @@ class Commentator():
             print("Warning: " + search_path + " " + "is empty.")
 
         return sound_files_array
-        
+
 
     def set_round_time(self, time_in_seconds):
         self._round_time_in_seconds = time_in_seconds
@@ -250,21 +256,21 @@ class Commentator():
 
         random.shuffle(dictionary)
         pseudo_random_number = random.randrange(0, len(dictionary))
-        
+
         # Make sure the number we got is not bigger than len(dictionary) or less than 0
         while pseudo_random_number > len(dictionary) - 1 or pseudo_random_number < 0:
                 pseudo_random_number = random.randrange(0, len(dictionary))
-        
+
         file = dictionary[pseudo_random_number]
         print("Choosing sound from the dictionary: {}".format(file))
         return file
-    
+
     def _is_currently_saying_something(self):
         if time.time() > self._started_saying_something_timestamp_in_seconds + self._last_audio_file_duration_in_seconds:
             return False
-        
+
         return True
-    
+
     # @param percent int a number between 0 - 100. The higher it is the more likely it is that his function returns True
     def _get_bool_from_percent(self, percent):
         value = random.randrange(0, 101)
@@ -272,7 +278,7 @@ class Commentator():
         if percent >= value:
             return True
         return False
-    
+
     # This method will ask Network Manager to send a PLAY_SOUND command to all clients
     # @param file_Same_team string Audio file name to be sent for the clients who play in the same team as host
     # @param file_different_team string Audio file name to be sent for the clients who play in different team than host
@@ -283,7 +289,7 @@ class Commentator():
         if file_enemy_team is not None:
             self._program.get_network_manager().send_message_to_clients("<" + "PLAY_SOUND|" + file_enemy_team + ">",
                                                                              self.get_enemy_team())
-    
+
     # Play an audio file related to the given eventId. Will also send the play audio command to clients
     def handle_event(self, event_id):
         # Every function call below checks the probability of playing an audio file from a specific dictionary
@@ -301,7 +307,7 @@ class Commentator():
         if self._handle_event_kill_hegrenade_enemy(event_id): return True
         if self._handle_event_kill_inferno_client(event_id): return True
         if self._handle_event_kill_inferno_enemy(event_id): return True
-                
+
         # *************** Time **************
 
         if self._handle_event_time_0_02(event_id): return True
@@ -315,7 +321,7 @@ class Commentator():
         if self._handle_event_time_1_00(event_id): return True
 
         # *************** Teamkiller **************
-                
+
         if self._handle_event_timeakiller_client(event_id): return True
         if self._handle_event_teamkiller_enemy(event_id): return True
 
@@ -324,7 +330,7 @@ class Commentator():
         if self._handle_event_suicide(event_id): return True
 
         # *************** Scores ***************
-        
+
         if self._handle_event_score_client(event_id): return True
         if self._handle_event_score_enemy(event_id): return True
         if self._handle_event_score_even(event_id): return True
@@ -342,7 +348,10 @@ class Commentator():
         if self._handle_event_score_client_4_0(event_id): return True
         if self._handle_event_score_client_5_1(event_id): return True
         if self._handle_event_score_client_6_1(event_id): return True
+        if self._handle_event_score_client_1_7(event_id): return True
         if self._handle_event_score_enemy_1_0(event_id): return True
+        if self._handle_event_score_enemy_1_1(event_id): return True
+        if self._handle_event_score_enemy_2_2(event_id): return True
         if self._handle_event_score_enemy_2_0(event_id): return True
         if self._handle_event_score_enemy_3_1(event_id): return True
 
@@ -353,7 +362,7 @@ class Commentator():
         # *************** Round Start ***************
 
         if self._handle_event_round_start(event_id): return True
-                
+
         # *************** Bomb  ***************
 
         if self._handle_event_defuse_client(event_id): return True
@@ -744,6 +753,16 @@ class Commentator():
 
         return False
 
+    def _handle_event_score_client_1_7(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_CLIENT_TEAM_1_7 \
+        and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_1_7)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
     def _handle_event_score_enemy_1_0(self, event_id):
         if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_1_0 \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
@@ -753,6 +772,27 @@ class Commentator():
             return True
 
         return False
+
+    def _handle_event_score_enemy_1_1(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_1_1 \
+        and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team_1_1)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_1_1)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_score_enemy_2_2(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_2_2 \
+        and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team_2_2)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_2_2)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
 
     def _handle_event_score_enemy_2_0(self, event_id):
         if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_2_0 \
@@ -866,7 +906,7 @@ class Commentator():
             return True
 
         return False
-    
+
     # @param audioFileClient string The file to be played locally and to be send to clients who play in the same team than host
     # @param audioFileEnemy string The file to be sent to client who play in different team than the host
     def _handle_event_with_audio_files(self, audio_file_client, audio_file_enemy=None):
@@ -878,7 +918,7 @@ class Commentator():
                                                          self._log_reader.get_path_sounds() + audio_file_enemy)
                 else:
                     self._send_play_sound_command_to_clients(self._log_reader.get_path_sounds() + audio_file_client, None)
-        
+
     def play_file(self, path):
         #if not self._is_currently_saying_something(): # Stop playing the previous comment and play the asked file
             self._last_audio_file_duration_in_seconds = self._get_file_duration(path)
@@ -887,54 +927,54 @@ class Commentator():
                 self._play_process.terminate()
             except Exception as e:
                 print("Warning: Unable to terminate audio process: {}".format(e))
-                
+
             try:
                 print("Playing sound: {}".format(path))
                 self._play_process = subprocess.Popen(['aplay', path])
             except Exception as e:
                 print("Warning: Unable to play audio file: {}".format(e))
-            
+
     def _get_file_duration(self, file_path):
         with contextlib.closing(wave.open(file_path,'r')) as f:
             frames = f.getnframes()
             rate = f.getframerate()
             duration = frames / float(rate)
             return duration
-        
+
     def get_client_team_points(self):
         if self.get_client_team() == 1:
             return self._team1_points
-        
+
         return self._team2_points
-    
+
     def get_enemy_team_points(self):
         if self.get_client_team() == 1:
             return self._team2_points
-        
+
         return self._team1_points
-    
+
     def _get_client_team_side(self):
         if self.get_client_team() == 1:
             return self._team1_side
-        
+
         return self._team2_side
-        
+
     # @return Time left in seconds
     def _get_round_time_left(self):
         if self._round_start_timestamp_in_seconds is not 0:
             return int(self._round_time_in_seconds - self._get_round_time_passed())
         return -1
-        
+
     # @return Match time passed in seconds
     def _get_round_time_passed(self):
         if self._round_start_timestamp_in_seconds is not 0:
             return int(time.time() - self._round_start_timestamp_in_seconds)
         return -1
-    
+
     def start_new_round(self):
         self._round_start_timestamp_in_seconds = int(time.time())
         self._hostage_taken_time_bonus_given_in_this_round = False
-	
+
     def set_round_start_time(self, time):
         self._round_start_timestamp_in_seconds = time
 
@@ -946,7 +986,7 @@ class Commentator():
     def reset_round_time(self):
         print("Reseting round time")
         self._round_start_timestamp_in_seconds = 0
-        
+
     def update_state(self):
         if (time.time() < self._check_time_timestamp_in_seconds + self._check_time_interval_in_seconds):
             return False
@@ -954,12 +994,12 @@ class Commentator():
         self._check_time()
 
         return True
-        
+
     # Checks how much time is left and if it is possible to comment it
     def _check_time(self):
         self._check_time_timestamp_in_seconds = time.time()
         round_time_left = self._get_round_time_left()
-        
+
         if round_time_left > 0:
             print("Round time left: {}".format(round_time_left))
 
@@ -981,7 +1021,7 @@ class Commentator():
             self.handle_event(self.SOUND_ID_TIME_0_40)
         elif round_time_left == 60:
             self.handle_event(self.SOUND_ID_TIME_1_00)
-        
+
     # @param teamId int 1 or 2
     def get_points(self, team_id):
         if team_id == 1:
@@ -996,11 +1036,11 @@ class Commentator():
             self.reset_points()
         elif self._team2_side == side and points < self._team2_points:
             self.reset_points()
-        
+
         # Remember old values before changing them
         client_team_points_old = self.get_client_team_points()
         enemy_team_points_old = self.get_enemy_team_points()
-        
+
         # Give the points to the team that plays on that side
         if self._team1_side == side:
             print("Team 1 scored {}".format(points))
@@ -1008,7 +1048,7 @@ class Commentator():
         elif self._team2_side == side:
             print("Team 2 scored {}".format(points))
             self._team2_points = points
-            
+
         self._handle_event_score(client_team_points_old, enemy_team_points_old)
 
     def _handle_event_score(self, client_team_points_old, enemy_team_points_old):
@@ -1043,6 +1083,8 @@ class Commentator():
                 self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_5_1)
             elif self.get_client_team_points() == 6 and self.get_enemy_team_points() == 1:
                 self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_6_1)
+            elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 7:
+                self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_1_7)
             elif self.get_client_team_points() == self.get_enemy_team_points():
                 self.handle_event(self.SOUND_ID_SCORE_EVEN)
             else: # No specific score found, play the default sound
@@ -1059,6 +1101,10 @@ class Commentator():
             # Are the points specific?
             elif self.get_client_team_points() == 0 and self.get_enemy_team_points() == 1:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_1_0)
+            elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 1:
+                self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_1_1)
+            elif self.get_client_team_points() == 2 and self.get_enemy_team_points() == 2:
+                self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_2_2)
             elif self.get_client_team_points() == 0 and self.get_enemy_team_points() == 2:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_2_0)
             elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 3:
@@ -1079,6 +1125,6 @@ class Commentator():
             self._team1_side = side
         if team_number == 2:
             self._team2_side = side
-            
+
         if self.get_client_team() == team_number:
             print("The client plays now on {} side".format(side))

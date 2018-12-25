@@ -40,10 +40,13 @@ class Commentator():
     SOUND_ID_SCORE_CLIENT_TEAM_4_0 = 9 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_5_1 = 10 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_6_1 = 11 # ...
+    SOUND_ID_SCORE_CLIENT_TEAM_1_7 = 1563656533655357861 # ...
     SOUND_ID_SCORE_CLIENT_TEAM_2_3 = 23 # ...
     SOUND_ID_SCORE_ENEMY_TEAM_1_0 = 4544338 # Enemy team got a point and the scores are 0 for client and 1 for enemy
     SOUND_ID_SCORE_ENEMY_TEAM_2_0 = 455888 # ...
     SOUND_ID_SCORE_ENEMY_TEAM_3_1 = 43338 # ...
+    SOUND_ID_SCORE_ENEMY_TEAM_1_1 = 43334544545578 # ...
+    SOUND_ID_SCORE_ENEMY_TEAM_2_2 = 433764764756654869458938 # ...
     SOUND_ID_SCORE_EVEN = 242422523 # ...
     SOUND_ID_DEFUSE_CLIENT_TEAM = 567473424654 # ...
     SOUND_ID_HOSTAGE_TAKEN_ENEMY_TEAM = 56747333424654 # ..
@@ -154,9 +157,12 @@ class Commentator():
         self._sound_dictionary_score_client_team_4_0 = self._load_sound_files("score-client-4-0")
         self._sound_dictionary_score_client_team_5_1 = self._load_sound_files("score-client-5-1")
         self._sound_dictionary_score_client_team_6_1 = self._load_sound_files("score-client-6-1")
+        self._sound_dictionary_score_client_team_1_7 = self._load_sound_files("score-client-1-7")
         self._sound_dictionary_score_enemy_team_1_0 = self._load_sound_files("score-enemy-1-0")
         self._sound_dictionary_score_enemy_team_2_0 = self._load_sound_files("score-enemy-2-0")
         self._sound_dictionary_score_enemy_team_3_1 = self._load_sound_files("score-enemy-3-1")
+        self._sound_dictionary_score_enemy_team_1_1 = self._load_sound_files("score-enemy-1-1")
+        self._sound_dictionary_score_enemy_team_2_2 = self._load_sound_files("score-enemy-2-2")
         self._sound_dictionary_score_even_client_team = self._load_sound_files("score-even-client")
         self._sound_dictionary_score_enemy_team = self._load_sound_files("score-enemy")
         self._sound_dictionary_score_win_client_team = self._load_sound_files("score-win-client")
@@ -205,6 +211,10 @@ class Commentator():
         try:
             for file in os.listdir(search_path):
                 if file.endswith(".wav"):
+                    # TODO Temporary fix.
+                    # For some reason Python 3 is unable to handle the following characters correctly. Correct them manually.
+                    file = file.replace("\udce4", "ä");
+                    file = file.replace("\udcf6", "ö");
                     sound_files_array.append(path + os.path.sep + file)
         except FileNotFoundError as e:
             print("Warning: " + search_path + " " + "is empty.")
@@ -336,7 +346,10 @@ class Commentator():
         if self._handle_event_score_client_4_0(event_id): return True
         if self._handle_event_score_client_5_1(event_id): return True
         if self._handle_event_score_client_6_1(event_id): return True
+        if self._handle_event_score_client_1_7(event_id): return True
         if self._handle_event_score_enemy_1_0(event_id): return True
+        if self._handle_event_score_enemy_1_1(event_id): return True
+        if self._handle_event_score_enemy_2_2(event_id): return True
         if self._handle_event_score_enemy_2_0(event_id): return True
         if self._handle_event_score_enemy_3_1(event_id): return True
 
@@ -738,6 +751,16 @@ class Commentator():
 
         return False
 
+    def _handle_event_score_client_1_7(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_CLIENT_TEAM_1_7 \
+        and self._get_bool_from_percent(self.PROBABILITY_SCORE_CLIENT_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_1_7)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
     def _handle_event_score_enemy_1_0(self, event_id):
         if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_1_0 \
         and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
@@ -747,6 +770,27 @@ class Commentator():
             return True
 
         return False
+
+    def _handle_event_score_enemy_1_1(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_1_1 \
+                and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team_1_1)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_1_1)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
+    def _handle_event_score_enemy_2_2(self, event_id):
+        if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_2_2 \
+                and self._get_bool_from_percent(self.PROBABILITY_SCORE_ENEMY_TEAM_SPECIFIC):
+            file_client = self._select_dictionary_sound_randomly(self._sound_dictionary_score_enemy_team_2_2)
+            file_enemy = self._select_dictionary_sound_randomly(self._sound_dictionary_score_client_team_2_2)
+            self._handle_event_with_audio_files(file_client, file_enemy)
+            return True
+
+        return False
+
 
     def _handle_event_score_enemy_2_0(self, event_id):
         if event_id == self.SOUND_ID_SCORE_ENEMY_TEAM_2_0 \
@@ -1028,6 +1072,8 @@ class Commentator():
                 self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_5_1)
             elif self.get_client_team_points() == 6 and self.get_enemy_team_points() == 1:
                 self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_6_1)
+            elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 7:
+                self.handle_event(self.SOUND_ID_SCORE_CLIENT_TEAM_1_7)
             elif self.get_client_team_points() == self.get_enemy_team_points():
                 self.handle_event(self.SOUND_ID_SCORE_EVEN)
             else: # No specific score found, play the default sound
@@ -1044,6 +1090,10 @@ class Commentator():
             # Are the points specific?
             elif self.get_client_team_points() == 0 and self.get_enemy_team_points() == 1:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_1_0)
+            elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 1:
+                self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_1_1)
+            elif self.get_client_team_points() == 2 and self.get_enemy_team_points() == 2:
+                self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_2_2)
             elif self.get_client_team_points() == 0 and self.get_enemy_team_points() == 2:
                 self.handle_event(self.SOUND_ID_SCORE_ENEMY_TEAM_2_0)
             elif self.get_client_team_points() == 1 and self.get_enemy_team_points() == 3:
