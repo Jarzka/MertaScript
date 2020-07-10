@@ -3,6 +3,7 @@ source/.settings
 source/__pycache__
 source/.project
 source/.pydevproject
+source/config.txt
 
 *.pyc
 *.wav
