@@ -4,6 +4,7 @@ source/__pycache__
 source/.project
 source/.pydevproject
 source/config.txt
+source/logs
 
 *.pyc
 *.wav
