@@ -26,7 +26,7 @@ class LogReader():
         self._commentator = commentator
 
     def initialize(self):
-        self._current_log_file =  self._find_most_recently_edited_log_file()
+        self._current_log_file = self._find_most_recently_edited_log_file()
 
     def update_state(self):
         if (time.time() < self._read_file_timestamp_in_seconds + self._read_file_interval_in_seconds):
@@ -78,7 +78,7 @@ class LogReader():
 
         print("Checking the newest log file...")
         self._check_newest_log_file_timestamp_in_seconds = time.time()
-        file_name_newest =  self._find_most_recently_edited_log_file()
+        file_name_newest = self._find_most_recently_edited_log_file()
 
         if not file_name_newest == file_name:
             print("Switching the newest log file from" + " " + file_name + " " + "to" + " " + file_name_newest)
@@ -104,9 +104,12 @@ class LogReader():
         except BaseException as e:
             print("Error reading the log file: {}".format(e))
 
-        for line in unread_lines: # Process the new lines
+        for index in range(0, len(unread_lines)): # Process the new lines
             # print("{} New line found: {}".format(time.strftime("%H:%M:%S"), line), end="")
-            self._scan_line(line)
+            previous_line_index = index - 1 if index > 0 else None
+            previous_line = unread_lines[previous_line_index] if previous_line_index is not None else None
+            line = unread_lines[index]
+            self._scan_line(line, previous_line)
 
     # This method is used when trying to guess in which team a killer and a victim play
     def _is_team_1_player_the_killer(self, string):
@@ -142,7 +145,7 @@ class LogReader():
         return regEx
 
     # Scans a single line and searches for interesting events
-    def _scan_line(self, line):
+    def _scan_line(self, line, previous_line):
         # Start from the common ones to save performance
         if self._scan_line_team1_teamkiller(line):
             return True
@@ -172,7 +175,7 @@ class LogReader():
             return True
         if self._scan_line_team2_kills_enemy_inferno(line):
             return True
-        if self._scan_line_suicide(line):
+        if self._scan_line_suicide(line, previous_line):
             return True
         if self._scan_line_round_draw(line):
             return True
@@ -227,6 +230,7 @@ class LogReader():
         match = re.search(reg_ex, line)
         if match:
             # This is a good match if there is NO team 1 player name BEFORE or AFTER the word killed
+            # and the player was not killed by the bomb (C4)
             if not self._is_team_1_player_the_killer(match.group(0)) \
                     and not self._is_team_1_player_the_victim(match.group(0)) \
                     and "by the bomb" not in line:
@@ -452,13 +456,13 @@ class LogReader():
                 return True
         return False
 
-    def _scan_line_suicide(self, line):
-        reg_ex = ".+committed suicide.+"
-        match = re.search(reg_ex, line)
+    def _scan_line_suicide(self, line, previous_line):
+        suicide_reg_ex = ".+committed suicide.+"
+        match = re.search(suicide_reg_ex, line)
 
-        if match:
-            # FIXME Broken since 2020 game update.
-            # How to fix: Check that the previous line does not contain "killed by the bomb".
+        # 2020 game update: suicide line has been added right after the "killed by the bomb".
+        # Suicide line should not match if it was caused by the bomb.
+        if match and (previous_line is None or "by the bomb" not in previous_line):
             print("Catch: {}".format(line))
             self._commentator.handle_event(commentator.Commentator.SOUND_ID_SUICIDE)
             return True
@@ -645,7 +649,6 @@ class LogReader():
                 self._commentator.handle_event(commentator.Commentator.SOUND_ID_DEFUSE_CLIENT_TEAM)
             return True
         return False
-
 
     def _scan_line_bomb_plant(self, line):
         reg_ex = "triggered.+"
